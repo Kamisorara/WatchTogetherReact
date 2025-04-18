@@ -1,10 +1,8 @@
-function App() {
+import { RouterProvider } from "react-router-dom";
+import router from "./router";
 
-  return (
-    <>
-      <p className='text-blue-200'>This is AtlasKK</p>
-    </>
-  )
+const App: React.FC = () => {
+  return <RouterProvider router={router} />;
 }
 
-export default App
+export default App;
