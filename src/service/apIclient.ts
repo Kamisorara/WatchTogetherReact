@@ -1,4 +1,4 @@
-import { AxiosRequestConfig, AxiosResponse } from './../../node_modules/axios/index.d';
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 const API_BASE_URL: string = import.meta.env.VITE_API_URL || "http://localhost:8081";
@@ -30,7 +30,7 @@ const axiosInstance: AxiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // 不需要token参与的api
-    const publicRoutes = ['/api/auth/login', '/api/auth/register'];
+    const publicRoutes = ['/api/sys/login', '/api/sys/register'];
     const isPublicRoute = publicRoutes.some(route => config.url?.includes(route));
 
     if (!isPublicRoute) {
