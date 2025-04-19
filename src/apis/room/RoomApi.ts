@@ -1,4 +1,4 @@
-import apiClient from "../../service/apIclient";
+import apiClient from "../../service/apiClient"
 import { User } from "../system/AuthApi";
 
 // 房间内用户详情
