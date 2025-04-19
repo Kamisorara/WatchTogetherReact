@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authApi } from '../apis/system/AuthApi';
+import FormInput from '../components/FormInput';
 
 // 定义表单值类型
 interface FormValues {
@@ -155,49 +156,26 @@ const LoginPage: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                <div>
-                  <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
-                    用户名
-                  </label>
-                  <input
-                    type="text"
-                    id="userName"
-                    name="userName"
-                    value={form.userName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="请输入用户名"
-                  />
-                  <div className="h-6 overflow-hidden"> {/* 固定高度的错误消息容器 */}
-                    {errors.userName && (
-                      <p className="mt-1 text-sm text-red-600 animate-[bounce_0.3s_ease-out] opacity-100">
-                        {errors.userName}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                {/* 用户名 */}
+                <FormInput
+                  label='用户名'
+                  name='userName'
+                  value={form.userName}
+                  onChange={handleChange}
+                  error={errors.userName}
+                  placeholder='请输入用户名'
+                />
 
-                <div>
-                  <label htmlFor="userPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    密码
-                  </label>
-                  <input
-                    type="userPassword"
-                    id="userPassword"
-                    name="userPassword"
-                    value={form.userPassword}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="请输入密码"
-                  />
-                  <div className="h-6 overflow-hidden"> {/* 固定高度的错误消息容器 */}
-                    {errors.userPassword && (
-                      <p className="mt-1 text-sm text-red-600 animate-[bounce_0.3s_ease-out] opacity-100">
-                        {errors.userPassword}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                {/* 密码 */}
+                <FormInput
+                  label='密码'
+                  name='userPassword'
+                  type='password'
+                  value={form.userPassword}
+                  onChange={handleChange}
+                  error={errors.userPassword}
+                  placeholder='请输入密码'
+                />
 
                 <div className="flex items-start">
                   <input
