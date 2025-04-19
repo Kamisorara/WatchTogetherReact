@@ -165,7 +165,13 @@ const LoginPage: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="请输入用户名"
                 />
-                {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
+                <div className="h-6 overflow-hidden"> {/* 固定高度的错误消息容器 */}
+                  {errors.username && (
+                    <p className="mt-1 text-sm text-red-600 animate-[bounce_0.3s_ease-out] opacity-100">
+                      {errors.username}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -181,7 +187,13 @@ const LoginPage: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="请输入密码"
                 />
-                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                <div className="h-6 overflow-hidden"> {/* 固定高度的错误消息容器 */}
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-600 animate-[bounce_0.3s_ease-out] opacity-100">
+                      {errors.password}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-start">
