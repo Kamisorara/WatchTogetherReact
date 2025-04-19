@@ -1,5 +1,5 @@
 import { Client, IMessage } from "@stomp/stompjs";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import videoSource from "../assets/mv.mp4";
 
 interface VideoPlayerProps {
@@ -48,7 +48,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
   };
 
   // 订阅视频控制消息
-  const subscribeToSyncMessage = () => {
+  const subscribeToSyncMessage = useCallback(() => {
     return stompClient?.subscribe(
       `/topic/video-control/${roomCode}`,
       (message: IMessage) => {
@@ -73,11 +73,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
 
       }
     );
-  };
+  }, [stompClient, roomCode, isControlledByServer]);
 
 
   // 同步进度到服务器
-  const syncVideoToServer = () => {
+  const syncVideoToServer = useCallback(() => {
     if (videoRef.current && !videoRef.current.paused) {
       const currentTime = videoRef.current.currentTime;
       stompClient?.publish({
@@ -85,7 +85,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
         body: JSON.stringify({ action: 'sync', time: currentTime }),
       });
     }
-  };
+  }, [stompClient, roomCode]);
 
   useEffect(() => {
     // 组件挂载时订阅消息
@@ -97,7 +97,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
       subscription?.unsubscribe();
       clearInterval(syncInterval);
     };
-  }, [stompClient, roomCode]);
+  }, [subscribeToSyncMessage, syncVideoToServer, SYNC_INTERVAL]);
 
 
   return (
