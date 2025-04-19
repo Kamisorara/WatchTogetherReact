@@ -7,6 +7,11 @@ interface VideoPlayerProps {
   roomCode: string;
 }
 
+interface ControlProps {
+  action: 'play' | 'pause' | 'sync';
+  time: number;
+}
+
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
   // 允许的时间差 1.5秒
   const SYNC_THRESHOLD = 1.5;
@@ -52,7 +57,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
     return stompClient?.subscribe(
       `/topic/video-control/${roomCode}`,
       (message: IMessage) => {
-        const controlParam = JSON.parse(message.body);
+        const controlParam: ControlProps = JSON.parse(message.body);
         // 手动拖动
         if (videoRef.current && !isControlledByServer) {
           const currentTime = videoRef.current.currentTime;
@@ -64,7 +69,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
           }
 
           // 同步播放或是暂停操作
-          if (controlParam.acion === 'play') {
+          if (controlParam.action === 'play') {
             videoRef.current.play();
           } else if (controlParam.action === 'pause') {
             videoRef.current.pause();
@@ -106,7 +111,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
       controls
       ref={videoRef}
       onPlay={handlePlay}
-      onPaste={handlePause}
+      onPause={handlePause}
       src={videoSource}
       muted
     >
