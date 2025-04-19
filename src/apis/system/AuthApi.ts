@@ -2,7 +2,7 @@ import apiClient from "../../service/apiClient";
 
 export interface User {
   id: string;
-  username: string;
+  userName: string;
   email: string;
   userPhone?: string;
   userSex?: string;
@@ -16,8 +16,8 @@ export interface LoginResponse {
 
 export const authApi = {
   // 登录
-  login: (username: string, password: string) => {
-    return apiClient.post<LoginResponse>('/api/sys/login', { username, password });
+  login: (userName: string, userPassword: string) => {
+    return apiClient.post<LoginResponse>('/api/sys/login', { userName, userPassword });
   },
 
   // 注册

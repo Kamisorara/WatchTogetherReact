@@ -5,21 +5,21 @@ import { authApi } from '../apis/system/AuthApi';
 
 // 定义表单值类型
 interface FormValues {
-  username: string;
-  password: string;
+  userName: string;
+  userPassword: string;
   agreeToTerms: boolean;
 }
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<FormValues>({
-    username: '',
-    password: '',
+    userName: '',
+    userPassword: '',
     agreeToTerms: false,
   });
   const [errors, setErrors] = useState({
-    username: '',
-    password: '',
+    userName: '',
+    userPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,15 +43,15 @@ const LoginPage: React.FC = () => {
   // 表单验证
   const validateForm = (): boolean => {
     let valid = true;
-    const newErrors = { username: '', password: '' };
+    const newErrors = { userName: '', userPassword: '' };
 
-    if (!form.username.trim()) {
-      newErrors.username = '请输入用户名';
+    if (!form.userName.trim()) {
+      newErrors.userName = '请输入用户名';
       valid = false;
     }
 
-    if (!form.password.trim()) {
-      newErrors.password = '请输入密码';
+    if (!form.userPassword.trim()) {
+      newErrors.userPassword = '请输入密码';
       valid = false;
     }
 
@@ -69,7 +69,7 @@ const LoginPage: React.FC = () => {
 
     try {
       // 使用实际的API调用
-      const response = await authApi.login(form.username, form.password);
+      const response = await authApi.login(form.userName, form.userPassword);
 
       if (response) {
         toast.success('登录成功，欢迎回来！', {
@@ -153,44 +153,44 @@ const LoginPage: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
                   用户名
                 </label>
                 <input
                   type="text"
-                  id="username"
-                  name="username"
-                  value={form.username}
+                  id="userName"
+                  name="userName"
+                  value={form.userName}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="请输入用户名"
                 />
                 <div className="h-6 overflow-hidden"> {/* 固定高度的错误消息容器 */}
-                  {errors.username && (
+                  {errors.userName && (
                     <p className="mt-1 text-sm text-red-600 animate-[bounce_0.3s_ease-out] opacity-100">
-                      {errors.username}
+                      {errors.userName}
                     </p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="userPassword" className="block text-sm font-medium text-gray-700 mb-1">
                   密码
                 </label>
                 <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={form.password}
+                  type="userPassword"
+                  id="userPassword"
+                  name="userPassword"
+                  value={form.userPassword}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="请输入密码"
                 />
                 <div className="h-6 overflow-hidden"> {/* 固定高度的错误消息容器 */}
-                  {errors.password && (
+                  {errors.userPassword && (
                     <p className="mt-1 text-sm text-red-600 animate-[bounce_0.3s_ease-out] opacity-100">
-                      {errors.password}
+                      {errors.userPassword}
                     </p>
                   )}
                 </div>
