@@ -104,7 +104,7 @@ const LoginPage: React.FC = () => {
       if (token) {
         try {
           const response = await authApi.getUserInfoFromToken();
-          console.log("token自动登录", response);
+          // console.log("Token验证", response);
           if (response && response.id) {
             toast.success('欢迎回来!', {
               position: "top-right",
