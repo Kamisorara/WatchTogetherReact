@@ -325,14 +325,6 @@ const HomePage: React.FC = () => {
           <PlusCircleIcon />
           创建房间
         </button>
-        <div className="mt-4 text-right">
-          <button
-            onClick={() => setCreateRoomModalOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            取消
-          </button>
-        </div>
       </Dialog>
 
       {/* 加入房间dialog */}
@@ -357,14 +349,6 @@ const HomePage: React.FC = () => {
             className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg"
           >
             加入
-          </button>
-        </div>
-        <div className="mt-4 text-right">
-          <button
-            onClick={() => setJoinRoomModalOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            取消
           </button>
         </div>
       </Dialog>
