@@ -6,7 +6,7 @@ export interface User {
   email: string;
   userPhone?: string;
   userSex?: string;
-  avatar?: string;
+  userAvatar?: string;
 }
 
 export interface LoginResponse {
