@@ -24,12 +24,12 @@ const HomePage: React.FC = () => {
   const [roomCodeInput, setRoomCodeInput] = useState<string>("");
   const [stompClient, setStompClient] = useState<Client | null>(null);
 
-  // 模态框状态
+  // 创建和加入房间dialog状态
   const [createRoomModalOpen, setCreateRoomModalOpen] = useState<boolean>(false);
   const [joinRoomModalOpen, setJoinRoomModalOpen] = useState<boolean>(false);
 
   // 设置dialog
-  const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const openSettings = () => setIsSettingsOpen(true);
   const closeSettings = () => setIsSettingsOpen(false);
 
