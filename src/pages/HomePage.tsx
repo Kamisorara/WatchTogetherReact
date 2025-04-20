@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import VideoPlayer from "../components/VideoPlayer";
+import { authApi } from "../apis/system/AuthApi";
+import { toast } from 'react-toastify';
 
 // 图标
 import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon } from "../components/Icons";
@@ -82,14 +84,7 @@ const HomePage: React.FC = () => {
     return client;
   }, []);
 
-  // 组件卸载时清理WebSocket连接
-  useEffect(() => {
-    return () => {
-      if (stompClient) {
-        stompClient.deactivate();
-      }
-    };
-  }, [stompClient]);
+
 
   // 创建房间
   const handleCreateRoom = async () => {
@@ -124,6 +119,49 @@ const HomePage: React.FC = () => {
       showNotification("加入房间失败", "请检查房间代码并重试", "error");
     }
   };
+
+  // 获取用户信息
+  const getUserInfo = async () => {
+    try {
+      const res = await authApi.getUserInfoFromToken();
+      if (res && res.id) {
+        setCurrentUser({
+          id: res.id || "1",
+          userName: res.userName || "当前用户",
+          userAvatar: ""
+        });
+        console.log("自动获取用户信息");
+      } else {
+        toast.error('获取用户信息失败', {
+          position: "top-left",
+          autoClose: 2000,
+          toastId: "login-fail",
+        });
+      }
+    } catch (error) {
+      console.log("获取用户信息失败", error);
+      toast.error('获取用户信息失败', {
+        position: "top-left",
+        autoClose: 2000,
+        toastId: "login-fail",
+      });
+    }
+
+  };
+
+  // 组件加载时获取用户信息
+  useEffect(() => {
+    getUserInfo();
+  }, []);
+
+  // 组件卸载时清理WebSocket连接
+  useEffect(() => {
+    return () => {
+      if (stompClient) {
+        stompClient.deactivate();
+      }
+    };
+  }, [stompClient]);
 
   // 简单通知函数（在生产环境中你应该使用适当的通知库）
   const showNotification = (message: string, description: string, type: 'success' | 'error') => {
