@@ -287,7 +287,7 @@ const HomePage: React.FC = () => {
                   <>
                     <button
                       onClick={() => setCreateRoomModalOpen(true)}
-                      className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 to-purple-900 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
+                      className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
                     >
                       <PlusCircleIcon />
                       <span>创建房间</span>
@@ -321,7 +321,7 @@ const HomePage: React.FC = () => {
         </div>
         <button
           onClick={handleCreateRoom}
-          className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2"
+          className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-purple-400 to-purple-500 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2"
         >
           <PlusCircleIcon />
           创建房间
@@ -347,7 +347,7 @@ const HomePage: React.FC = () => {
           />
           <button
             onClick={handleJoinRoom}
-            className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg"
+            className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-400 to-purple-500 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg"
           >
             加入
           </button>
