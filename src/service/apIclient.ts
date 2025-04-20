@@ -1,7 +1,8 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { API_URL } from './ipAddress';
 
-const API_BASE_URL: string = import.meta.env.VITE_API_URL || "http://localhost:8081";
+const API_BASE_URL: string = API_URL;
 
 // API response 结构
 export interface ApiResponse<T = unknown> {

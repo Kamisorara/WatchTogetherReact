@@ -5,6 +5,7 @@ import VideoPlayer from "../components/VideoPlayer";
 import Dialog from "../components/dialog";
 import { authApi } from "../apis/system/AuthApi";
 import { toast } from 'react-toastify';
+import { WEBSOCKET_SERVER_URL } from "../service/ipAddress";
 
 // 图标
 import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon } from "../components/Icons";
@@ -15,7 +16,7 @@ interface User {
   userAvatar: string;
 }
 
-const LOCAL_WEBSOCKET_SERVER_URL = "http://localhost:8081/websocket"; // 使用你的WebSocket服务器URL更新此处
+const LOCAL_WEBSOCKET_SERVER_URL = WEBSOCKET_SERVER_URL;
 
 const HomePage: React.FC = () => {
   // 房间状态
