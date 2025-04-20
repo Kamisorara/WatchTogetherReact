@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import VideoPlayer from "../components/VideoPlayer";
+import Dialog from "../components/dialog";
 import { authApi } from "../apis/system/AuthApi";
 import { toast } from 'react-toastify';
 
@@ -26,6 +27,11 @@ const HomePage: React.FC = () => {
   // 模态框状态
   const [createRoomModalOpen, setCreateRoomModalOpen] = useState<boolean>(false);
   const [joinRoomModalOpen, setJoinRoomModalOpen] = useState<boolean>(false);
+
+  // 设置dialog
+  const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+  const openSettings = () => setIsSettingsOpen(true);
+  const closeSettings = () => setIsSettingsOpen(false);
 
   // 用户状态
   const [currentUser, setCurrentUser] = useState<User>({
@@ -246,7 +252,7 @@ const HomePage: React.FC = () => {
               >
                 <AudioIcon isMuted={isMuted} />
               </div>
-              <div className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110">
+              <div className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110" onClick={openSettings}>
                 <SettingsIcon />
               </div>
             </div>
@@ -302,74 +308,74 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 创建房间模态框 */}
-      {createRoomModalOpen && (
-        <div className="fixed inset-0 bg黑色/50 flex items-center justify-center z-50">
-          <div className="bg-white w-80 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-800">创建新房间</h3>
-            </div>
-            <div className="p-6">
-              <div className="mb-5 text-center text-gray-600">
-                创建一个新的观影派对并邀请您的朋友!
-              </div>
-              <button
-                onClick={handleCreateRoom}
-                className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2"
-              >
-                <PlusCircleIcon />
-                创建房间
-              </button>
-              <div className="mt-4 text-right">
-                <button
-                  onClick={() => setCreateRoomModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  取消
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* 创建房间dialog */}
+      <Dialog
+        isOpen={createRoomModalOpen}
+        onClose={() => setCreateRoomModalOpen(false)}
+        title="创建新房间"
+        size="sm"
+      >
+        <div className="mb-5 text-center text-gray-600">
+          创建一个新的观影派对并邀请您的朋友!
         </div>
-      )}
+        <button
+          onClick={handleCreateRoom}
+          className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2"
+        >
+          <PlusCircleIcon />
+          创建房间
+        </button>
+        <div className="mt-4 text-right">
+          <button
+            onClick={() => setCreateRoomModalOpen(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            取消
+          </button>
+        </div>
+      </Dialog>
 
-      {/* 加入房间模态框 */}
-      {joinRoomModalOpen && (
-        <div className="fixed inset-0 bg黑色/50 flex items-center justify-center z-50">
-          <div className="bg-white w-96 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-800">加入观影派对</h3>
-            </div>
-            <div className="p-6">
-              <div className="mb-5 text-center text-gray-600 font-medium">
-                输入房间代码加入朋友的观影派对
-              </div>
-              <div className="flex gap-3">
-                <input
-                  value={roomCodeInput}
-                  onChange={(e) => setRoomCodeInput(e.target.value)}
-                  placeholder="输入房间代码"
-                  className="flex-1 px-4 py-3 text-base rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-                <button
-                  onClick={handleJoinRoom}
-                  className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg"
-                >
-                  加入
-                </button>
-              </div>
-              <div className="mt-4 text-right">
-                <button
-                  onClick={() => setJoinRoomModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  取消
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* 加入房间dialog */}
+      <Dialog
+        isOpen={joinRoomModalOpen}
+        onClose={() => setJoinRoomModalOpen(false)}
+        title="加入观影派对"
+        size="md"
+      >
+        <div className="mb-5 text-center text-gray-600 font-medium">
+          输入房间代码加入朋友的观影派对
         </div>
-      )}
+        <div className="flex gap-3">
+          <input
+            value={roomCodeInput}
+            onChange={(e) => setRoomCodeInput(e.target.value)}
+            placeholder="输入房间代码"
+            className="flex-1 px-4 py-3 text-base rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <button
+            onClick={handleJoinRoom}
+            className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-lg"
+          >
+            加入
+          </button>
+        </div>
+        <div className="mt-4 text-right">
+          <button
+            onClick={() => setJoinRoomModalOpen(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            取消
+          </button>
+        </div>
+      </Dialog>
+
+      <Dialog
+        isOpen={isSettingsOpen}
+        onClose={closeSettings}
+        title="个人资料设置"
+      >
+        这是设置
+      </Dialog>
     </div>
   );
 };
