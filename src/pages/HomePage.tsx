@@ -14,7 +14,7 @@ interface User {
   userAvatar: string;
 }
 
-const LOCAL_WEBSOCKET_SERVER_URL = "http://localhost:8081/ws"; // 使用你的WebSocket服务器URL更新此处
+const LOCAL_WEBSOCKET_SERVER_URL = "http://localhost:8081/websocket"; // 使用你的WebSocket服务器URL更新此处
 
 const HomePage: React.FC = () => {
   // 房间状态
@@ -42,7 +42,7 @@ const HomePage: React.FC = () => {
     const client = new Client({
       webSocketFactory: () => socket,
       connectHeaders: {
-        token: localStorage.getItem("token"),
+        token: localStorage.getItem("token") || "",
         roomCode: room,
       },
       debug: function (str) {
