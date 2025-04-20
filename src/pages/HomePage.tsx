@@ -35,6 +35,9 @@ const HomePage: React.FC = () => {
   });
   const [otherUsers, setOtherUsers] = useState<User[]>([]);
 
+  // 添加麦克风状态
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+
   // 连接到WebSocket服务器
   const connectToWebSocketServer = useCallback((room: string) => {
     const socket = new SockJS(LOCAL_WEBSOCKET_SERVER_URL);
@@ -84,7 +87,10 @@ const HomePage: React.FC = () => {
     return client;
   }, []);
 
-
+  // 添加切换麦克风状态的函数
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
 
   // 创建房间
   const handleCreateRoom = async () => {
@@ -234,8 +240,15 @@ const HomePage: React.FC = () => {
               {currentUser.userName}
             </div>
             <div className="ml-auto flex items-center">
-              <AudioIcon className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110" />
-              <SettingsIcon className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110" />
+              <div
+                onClick={toggleMute}
+                className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110"
+              >
+                <AudioIcon isMuted={isMuted} />
+              </div>
+              <div className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110">
+                <SettingsIcon />
+              </div>
             </div>
           </div>
         </div>
