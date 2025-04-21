@@ -130,7 +130,7 @@ const HomePage: React.FC = () => {
     try {
       setIsLoading(true);
       // 调用API创建房间
-      const response: any = await roomApi.createRoom();
+      const response: string = await roomApi.createRoom();
       console.log(response);
       if (response) {
         const newRoomCode = response;
@@ -172,7 +172,7 @@ const HomePage: React.FC = () => {
 
       setIsLoading(true);
       // 调用API加入房间
-      const response: any = await roomApi.joinRoom(roomCodeInput);
+      const response: string = await roomApi.joinRoom(roomCodeInput);
       console.log(response)
       if (response) {
         setRoomCode(roomCodeInput);
@@ -184,7 +184,7 @@ const HomePage: React.FC = () => {
         });
         setJoinRoomModalOpen(false);
       } else {
-        toast.error('加入房间失败: ' + (response?.message || '未知错误'), {
+        toast.error('加入房间失败: ' + '未知错误', {
           position: "top-right",
           autoClose: 3000,
         });
