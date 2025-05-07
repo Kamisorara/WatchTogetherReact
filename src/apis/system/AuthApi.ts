@@ -42,4 +42,18 @@ export const authApi = {
       userSex
     });
   },
+
+  // GitHub OAuth相关
+  getGithubOAuthUrl: () => {
+    return apiClient.get<{ url: string }>('/api/oauth2/github/authorize');
+  },
+
+  // GitHub OAuth完成注册
+  completeOAuthRegistration: (email: string, oauthId: string, username?: string) => {
+    return apiClient.post<LoginResponse>('/api/oauth2/complete-registration', {
+      email,
+      oauthId,
+      username
+    });
+  },
 }
