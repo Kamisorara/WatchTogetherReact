@@ -252,7 +252,7 @@ const LoginPage: React.FC = () => {
 
       verifyToken();
     }
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, oauthRegisterForm]);
 
   // 渲染OAuth注册表单
   const renderOAuthRegisterForm = () => (
