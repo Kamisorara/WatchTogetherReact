@@ -21,7 +21,8 @@ export interface ApiError {
 // axios instance
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 2000000,
+  //TODO 测试文件上传，后续调整超时时间为10000
+  timeout: 200000,
   headers: {
     "Content-Type": "application/json",
   },
