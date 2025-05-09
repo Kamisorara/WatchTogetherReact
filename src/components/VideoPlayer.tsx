@@ -1,10 +1,10 @@
 import { Client, IMessage } from "@stomp/stompjs";
 import { useCallback, useEffect, useRef, useState } from "react";
-import videoSource from "../assets/mv.mp4";
 
 interface VideoPlayerProps {
   stompClient: Client | null;
   roomCode: string;
+  videoUrl: string; // 新增视频 URL 参数
 }
 
 interface ControlProps {
@@ -12,7 +12,7 @@ interface ControlProps {
   time: number;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoUrl }) => {
   // 允许的时间差 1.5秒
   const SYNC_THRESHOLD = 1.5;
   // 同步间隔 2秒
@@ -20,6 +20,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isControlledByServer, setIsControlledByServer] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 视频加载成功处理
+  const handleVideoLoaded = () => {
+    setIsLoading(false);
+    setError(null);
+  };
+
+  // 视频加载错误处理
+  const handleVideoError = () => {
+    setIsLoading(false);
+    setError("无法加载视频，请检查视频链接或网络连接");
+  };
 
   // 开始播放处理
   const handlePlay = () => {
@@ -129,7 +143,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
   }, [stompClient, roomCode, isControlledByServer, syncVideoToServer]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-black">
+    <div className="w-full h-full flex items-center justify-center bg-black relative">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white"></div>
+        </div>
+      )}
+
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-10">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p>{error}</p>
+          </div>
+        </div>
+      )}
+
       <video
         className="max-h-full max-w-full"
         controls
@@ -137,7 +165,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode }) => {
         onPlay={handlePlay}
         onPause={handlePause}
         onSeeked={handleSeeked}
-        src={videoSource}
+        onLoadedData={handleVideoLoaded}
+        onError={handleVideoError}
+        src={videoUrl}
       >
         你的浏览器不支持这个视频播放
       </video>

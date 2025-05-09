@@ -6,12 +6,20 @@ import Dialog from "../components/dialog";
 import { authApi, User } from "../apis/system/AuthApi";
 import { toast } from 'react-toastify';
 import { WEBSOCKET_SERVER_URL } from "../service/ipAddress";
-import { roomApi } from "../apis/room/RoomApi"; // 导入房间API
+import { roomApi } from "../apis/room/RoomApi";
 
 // 图标
-import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon } from "../components/Icons";
+import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon, FilmIcon } from "../components/Icons";
 import { useNavigate } from "react-router-dom";
 
+// 电影接口定义
+interface Movie {
+  id: string;
+  title: string;
+  coverUrl: string;
+  videoUrl: string;
+  description?: string;
+}
 
 const LOCAL_WEBSOCKET_SERVER_URL = WEBSOCKET_SERVER_URL;
 
@@ -24,6 +32,13 @@ const HomePage: React.FC = () => {
   const [roomCodeInput, setRoomCodeInput] = useState<string>("");
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // 电影相关状态
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isRoomCreator, setIsRoomCreator] = useState<boolean>(false);
+  const [showMovieSelector, setShowMovieSelector] = useState<boolean>(false);
+  const [loadingMovies, setLoadingMovies] = useState<boolean>(false);
 
   // 创建和加入房间dialog状态
   const [createRoomModalOpen, setCreateRoomModalOpen] = useState<boolean>(false);
@@ -45,6 +60,55 @@ const HomePage: React.FC = () => {
 
   // 添加麦克风状态
   const [isMuted, setIsMuted] = useState<boolean>(false);
+
+  // 获取电影列表
+  const fetchMovies = useCallback(async () => {
+    try {
+      setLoadingMovies(true);
+      // 这里替换为实际的 API 调用
+      const response = await roomApi.getMovieList();
+      setMovies(response);
+    } catch (error) {
+      console.error("获取电影列表失败", error);
+      toast.error('获取电影列表失败', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setLoadingMovies(false);
+    }
+  }, []);
+
+  // 选择电影
+  const handleSelectMovie = (movie: Movie) => {
+    if (!isRoomCreator) {
+      toast.info('只有房主可以选择电影', {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return;
+    }
+
+    setSelectedMovie(movie);
+    setShowMovieSelector(false);
+
+    // 通过 WebSocket 广播电影选择
+    if (stompClient && roomCode) {
+      stompClient.publish({
+        destination: `/app/movie-select/${roomCode}`,
+        body: JSON.stringify({
+          movieId: movie.id,
+          videoUrl: movie.videoUrl,
+          title: movie.title
+        }),
+      });
+
+      toast.success(`已选择电影: ${movie.title}`, {
+        position: "top-right",
+        autoClose: 2000,
+      });
+    }
+  };
 
   // 获取房间用户列表
   const fetchRoomUsers = useCallback(async (roomId: string) => {
@@ -95,6 +159,9 @@ const HomePage: React.FC = () => {
       // 连接成功后立即获取房间用户列表
       fetchRoomUsers(room);
 
+      // 连接成功后获取电影列表
+      fetchMovies();
+
       // 订阅房间更新
       client.subscribe(`/topic/room/${room}`, (message) => {
         const payload = JSON.parse(message.body);
@@ -103,6 +170,34 @@ const HomePage: React.FC = () => {
         if (payload.type === "USER_CHANGE") {
           console.log("检测到用户变化，正在更新用户列表");
           fetchRoomUsers(room);
+        }
+      });
+
+      // 订阅电影选择消息
+      client.subscribe(`/topic/movie-select/${room}`, (message) => {
+        try {
+          const movieData = JSON.parse(message.body);
+          console.log("收到电影选择:", movieData);
+
+          // 从电影列表中找到对应的电影
+          const selected = movies.find(m => m.id === movieData.movieId);
+          if (selected) {
+            setSelectedMovie(selected);
+            toast.info(`正在播放: ${selected.title}`, {
+              position: "top-center",
+              autoClose: 2000,
+            });
+          } else if (movieData.videoUrl) {
+            // 如果找不到电影但有 URL，创建一个临时电影对象
+            setSelectedMovie({
+              id: movieData.movieId || "unknown",
+              title: movieData.title || "未知电影",
+              videoUrl: movieData.videoUrl,
+              coverUrl: ""
+            });
+          }
+        } catch (error) {
+          console.error("处理电影选择失败:", error);
         }
       });
 
@@ -121,7 +216,7 @@ const HomePage: React.FC = () => {
     client.activate();
 
     return client;
-  }, [fetchRoomUsers]);
+  }, [fetchRoomUsers, fetchMovies, movies]);
 
   // 添加切换麦克风状态的函数
   const toggleMute = () => {
@@ -139,6 +234,7 @@ const HomePage: React.FC = () => {
         const newRoomCode = response;
         setRoomCode(newRoomCode);
         setIsInRoom(true);
+        setIsRoomCreator(true); // 设置为房主
         connectToWebSocketServer(newRoomCode);
         toast.success(`房间创建成功! 房间代码: ${newRoomCode}`, {
           position: "top-right",
@@ -180,6 +276,7 @@ const HomePage: React.FC = () => {
       if (response) {
         setRoomCode(roomCodeInput);
         setIsInRoom(true);
+        setIsRoomCreator(false); // 不是房主
         connectToWebSocketServer(roomCodeInput);
         toast.success('成功加入房间!', {
           position: "top-right",
@@ -274,12 +371,22 @@ const HomePage: React.FC = () => {
             <SearchIcon style={{ fontSize: 24 }} />
           </div>
         )}
+
+        {/* 已在房间内且是创建者，显示选择电影按钮 */}
+        {isInRoom && (
+          <div
+            className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
+            onClick={() => setShowMovieSelector(true)}
+          >
+            <FilmIcon style={{ fontSize: 24 }} />
+          </div>
+        )}
       </div>
 
       {/* 频道/用户列表 */}
       <div className="min-w-[280px] bg-gradient-to-b from-gray-100 to-purple-100 flex flex-col shadow-md z-5">
         <div className="px-4 pt-5 flex justify-between items-center text-gray-700">
-          <span className="text-sm font-medium">派对成员</span>
+          <span className="text-sm font-medium">频道成员</span>
           <span className="text-sm font-medium">
             {isLoading ? '加载中...' : `${otherUsers.length} 在线`}
           </span>
@@ -345,11 +452,18 @@ const HomePage: React.FC = () => {
       {/* 主要内容 */}
       <div className="flex-grow flex flex-col bg-gray-50 relative">
         {/* 头部 */}
-        <div className="flex justify-center p-4 m-5 mt-5 mb-0 rounded-2xl bg-white shadow-md z-1">
+        <div className="flex justify-between p-4 m-5 mt-5 mb-0 rounded-2xl bg-white shadow-md z-1">
           {!isInRoom ? (
             <div className="text-lg font-bold text-gray-800">尚未加入房间</div>
           ) : (
-            <div className="text-lg font-bold text-gray-800">观影派对: {roomCode}</div>
+            <>
+              <div className="text-lg font-bold text-gray-800">观影派对: {roomCode}</div>
+              {selectedMovie && (
+                <div className="text-sm font-medium text-purple-600">
+                  正在播放: {selectedMovie.title}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -392,8 +506,26 @@ const HomePage: React.FC = () => {
                 )}
               </div>
             </div>
+          ) : selectedMovie ? (
+            <VideoPlayer stompClient={stompClient} roomCode={roomCode} videoUrl={selectedMovie.videoUrl} />
           ) : (
-            <VideoPlayer stompClient={stompClient} roomCode={roomCode} />
+            <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
+              <div className="w-25 h-25 rounded-full bg-purple-100 flex items-center justify-center shadow-lg">
+                <FilmIcon style={{ fontSize: 48, color: "#7c4dff", opacity: 0.8 }} />
+              </div>
+              <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
+                {isRoomCreator ? "请选择一部电影开始观看" : "等待房主选择电影..."}
+              </div>
+              {isRoomCreator && (
+                <button
+                  onClick={() => setShowMovieSelector(true)}
+                  className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
+                >
+                  <FilmIcon />
+                  <span>选择电影</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -457,6 +589,71 @@ const HomePage: React.FC = () => {
             ) : (
               '加入'
             )}
+          </button>
+        </div>
+      </Dialog>
+
+      {/* 电影选择对话框 */}
+      <Dialog
+        isOpen={showMovieSelector}
+        onClose={() => setShowMovieSelector(false)}
+        title="选择电影"
+        size="lg"
+      >
+        <div className="mb-5 text-center text-gray-600">
+          {isRoomCreator
+            ? "选择一部电影与房间内的所有人一起观看"
+            : "目前可用的电影列表 (只有房主可以选择)"}
+        </div>
+
+        {loadingMovies ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-700"></div>
+          </div>
+        ) : movies.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-96">
+            {movies.map(movie => (
+              <div
+                key={movie.id}
+                className={`relative rounded-lg overflow-hidden shadow-md cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 ${!isRoomCreator && 'pointer-events-none opacity-80'}`}
+                onClick={() => handleSelectMovie(movie)}
+              >
+                <div className="aspect-w-16 aspect-h-9">
+                  <img
+                    src={movie.coverUrl}
+                    alt={movie.title}
+                    className="object-cover w-full h-full"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x169?text=No+Image';
+                    }}
+                  />
+                </div>
+                <div className="p-3 bg-white">
+                  <h3 className="font-semibold text-sm text-gray-800 truncate">{movie.title}</h3>
+                  {movie.description && (
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{movie.description}</p>
+                  )}
+                </div>
+                {selectedMovie?.id === movie.id && (
+                  <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full">
+                    当前播放
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10 text-gray-500">
+            暂无可用电影
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={() => setShowMovieSelector(false)}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+          >
+            关闭
           </button>
         </div>
       </Dialog>
