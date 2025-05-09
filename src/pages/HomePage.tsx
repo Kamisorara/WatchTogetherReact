@@ -10,11 +10,14 @@ import { roomApi } from "../apis/room/RoomApi"; // 导入房间API
 
 // 图标
 import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon } from "../components/Icons";
+import { useNavigate } from "react-router-dom";
 
 
 const LOCAL_WEBSOCKET_SERVER_URL = WEBSOCKET_SERVER_URL;
 
 const HomePage: React.FC = () => {
+  // 路由
+  const navigate = useNavigate();
   // 房间状态
   const [isInRoom, setIsInRoom] = useState<boolean>(false);
   const [roomCode, setRoomCode] = useState<string>("");
@@ -221,11 +224,12 @@ const HomePage: React.FC = () => {
       }
     } catch (error) {
       console.log("获取用户信息失败", error);
-      toast.error('获取用户信息失败', {
+      toast.error('获取用户信息失败, 请登录！', {
         position: "top-left",
         autoClose: 2000,
         toastId: "login-fail",
       });
+      navigate('/login');
     }
   };
 
