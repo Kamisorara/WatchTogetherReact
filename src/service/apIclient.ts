@@ -21,7 +21,7 @@ export interface ApiError {
 // axios instance
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 2000000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -134,6 +134,32 @@ export const apiClient = {
   // 原始请求方法，直接返回 ApiResponse，不经过自动解包
   request: <T>(config: AxiosRequestConfig) => {
     return axiosInstance.request<ApiResponse<T>, ApiResponse<T>>(config);
+  },
+
+  // 文件上传方法，支持进度监控
+  //TODO 还需实现分段上传
+  upload: <T>(
+    url: string,
+    formData: FormData,
+    onProgress?: (percentage: number) => void,
+    config?: AxiosRequestConfig
+  ) => {
+    const uploadConfig: AxiosRequestConfig = {
+      ...config,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...(config?.headers || {})
+      },
+      //TODO 因为onUploadProgress不能在nodejs环境中使用，之后创建Electorn版本需要使用XMLHttpRequest
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total && onProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percentCompleted);
+        }
+      }
+    };
+
+    return axiosInstance.post<ApiResponse<T>, T>(url, formData, uploadConfig);
   }
 };
 
