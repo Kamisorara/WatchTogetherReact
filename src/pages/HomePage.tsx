@@ -6,20 +6,12 @@ import Dialog from "../components/dialog";
 import { authApi, User } from "../apis/system/AuthApi";
 import { toast } from 'react-toastify';
 import { WEBSOCKET_SERVER_URL } from "../service/ipAddress";
-import { roomApi } from "../apis/room/RoomApi";
+import { roomApi, MovieProps } from "../apis/room/RoomApi";
+import MovieUploader from "../components/MovieUploader";
 
 // 图标
-import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon, FilmIcon } from "../components/Icons";
+import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon, FilmIcon, FileUploadIcon } from "../components/Icons";
 import { useNavigate } from "react-router-dom";
-
-// 电影接口定义
-interface Movie {
-  id: string;
-  title: string;
-  coverUrl: string;
-  videoUrl: string;
-  description?: string;
-}
 
 const LOCAL_WEBSOCKET_SERVER_URL = WEBSOCKET_SERVER_URL;
 
@@ -34,8 +26,8 @@ const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // 电影相关状态
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [movies, setMovies] = useState<MovieProps[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<MovieProps | null>(null);
   const [isRoomCreator, setIsRoomCreator] = useState<boolean>(false);
   const [showMovieSelector, setShowMovieSelector] = useState<boolean>(false);
   const [loadingMovies, setLoadingMovies] = useState<boolean>(false);
@@ -61,6 +53,9 @@ const HomePage: React.FC = () => {
   // 添加麦克风状态
   const [isMuted, setIsMuted] = useState<boolean>(false);
 
+  // 添加电影上传相关状态
+  const [showUploadMovieDialog, setShowUploadMovieDialog] = useState<boolean>(false);
+
   // 获取电影列表
   const fetchMovies = useCallback(async () => {
     try {
@@ -80,7 +75,7 @@ const HomePage: React.FC = () => {
   }, []);
 
   // 选择电影
-  const handleSelectMovie = (movie: Movie) => {
+  const handleSelectMovie = (movie: MovieProps) => {
     if (!isRoomCreator) {
       toast.info('只有房主可以选择电影', {
         position: "top-center",
@@ -128,7 +123,7 @@ const HomePage: React.FC = () => {
       console.error("获取房间用户失败:", error);
       toast.error('获取房间用户失败', {
         position: "top-right",
-        autoClose: 2000,
+        autoClose: 3000,
       });
     } finally {
       setIsLoading(false);
@@ -221,6 +216,14 @@ const HomePage: React.FC = () => {
   // 添加切换麦克风状态的函数
   const toggleMute = () => {
     setIsMuted(!isMuted);
+  };
+
+  // 处理上传完成
+  const handleUploadComplete = () => {
+    // 重新获取电影列表
+    fetchMovies();
+    // 关闭上传对话框
+    setShowUploadMovieDialog(false);
   };
 
   // 创建房间
@@ -379,6 +382,16 @@ const HomePage: React.FC = () => {
             onClick={() => setShowMovieSelector(true)}
           >
             <FilmIcon style={{ fontSize: 24 }} />
+          </div>
+        )}
+
+        {/* 上传电影按钮 - 显示给所有在房间中的用户 */}
+        {isInRoom && (
+          <div
+            className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
+            onClick={() => setShowUploadMovieDialog(true)}
+          >
+            <FileUploadIcon style={{ fontSize: 24 }} />
           </div>
         )}
       </div>
@@ -648,7 +661,14 @@ const HomePage: React.FC = () => {
           </div>
         )}
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-between">
+          <button
+            onClick={() => setShowUploadMovieDialog(true)}
+            className="px-4 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors flex items-center gap-2"
+          >
+            <FileUploadIcon />
+            上传新电影
+          </button>
           <button
             onClick={() => setShowMovieSelector(false)}
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
@@ -656,6 +676,20 @@ const HomePage: React.FC = () => {
             关闭
           </button>
         </div>
+      </Dialog>
+
+      {/* 电影上传对话框 */}
+      <Dialog
+        isOpen={showUploadMovieDialog}
+        onClose={() => setShowUploadMovieDialog(false)}
+        title="上传电影"
+        size="md"
+      >
+        <MovieUploader
+          roomCode={roomCode}
+          onUploadComplete={handleUploadComplete}
+          onCancel={() => setShowUploadMovieDialog(false)}
+        />
       </Dialog>
 
       {/* 设置对话框 */}
