@@ -21,8 +21,7 @@ export interface ApiError {
 // axios instance
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  //TODO 测试文件上传，后续调整超时时间为10000
-  timeout: 200000,
+  timeout: 10000, // 10s 请求超时时间
   headers: {
     "Content-Type": "application/json",
   },
@@ -147,6 +146,7 @@ export const apiClient = {
   ) => {
     const uploadConfig: AxiosRequestConfig = {
       ...config,
+      timeout: 1800000, // 默认30分钟
       headers: {
         'Content-Type': 'multipart/form-data',
         ...(config?.headers || {})
@@ -161,7 +161,44 @@ export const apiClient = {
     };
 
     return axiosInstance.post<ApiResponse<T>, T>(url, formData, uploadConfig);
-  }
+  },
+
+
+  // 备用上传方案
+  // upload: <T>(
+  //   url: string,
+  //   formData: FormData,
+  //   onProgress?: (percentage: number) => void,
+  //   config?: AxiosRequestConfig
+  // ) => {
+  //   // 尝试获取文件大小来动态设置超时时间
+  //   let timeout = 1800000; // 默认30分钟
+  //   const fileEntry = formData.get('file');
+  //   if (fileEntry instanceof File) {
+  //     // 根据文件大小动态计算超时时间
+  //     // 假设每MB需要3秒，最少10分钟，最多2小时
+  //     const fileSizeMB = fileEntry.size / (1024 * 1024);
+  //     const calculatedTimeout = Math.max(600000, Math.min(7200000, fileSizeMB * 3000));
+  //     timeout = calculatedTimeout;
+  //   }
+
+  //   const uploadConfig: AxiosRequestConfig = {
+  //     ...config,
+  //     timeout: timeout,
+  //     headers: {
+  //       'Content-Type': 'multipart/form-data',
+  //       ...(config?.headers || {})
+  //     },
+  //     onUploadProgress: (progressEvent) => {
+  //       if (progressEvent.total && onProgress) {
+  //         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+  //         onProgress(percentCompleted);
+  //       }
+  //     }
+  //   };
+
+  //   return axiosInstance.post<ApiResponse<T>, T>(url, formData, uploadConfig);
+  // }
 };
 
 export default apiClient;
