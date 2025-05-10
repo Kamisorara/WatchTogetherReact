@@ -18,12 +18,16 @@ const LOCAL_WEBSOCKET_SERVER_URL = WEBSOCKET_SERVER_URL;
 const HomePage: React.FC = () => {
   // 路由
   const navigate = useNavigate();
+
   // 房间状态
   const [isInRoom, setIsInRoom] = useState<boolean>(false);
   const [roomCode, setRoomCode] = useState<string>("");
   const [roomCodeInput, setRoomCodeInput] = useState<string>("");
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // 添加WebSocket连接状态
+  const [wsConnectionStatus, setWsConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
 
   // 电影相关状态
   const [movies, setMovies] = useState<MovieProps[]>([]);
@@ -132,7 +136,21 @@ const HomePage: React.FC = () => {
 
   // 连接到WebSocket服务器
   const connectToWebSocketServer = useCallback((room: string) => {
+    // 设置连接状态为"连接中"
+    setWsConnectionStatus('connecting');
+
     const socket = new SockJS(LOCAL_WEBSOCKET_SERVER_URL);
+
+    // 监听SockJS原生事件
+    socket.onopen = () => console.log("SockJS连接已打开");
+    socket.onclose = () => {
+      console.log("SockJS连接已关闭");
+      // 注意：这里不设置状态，因为STOMP客户端会处理重连
+    };
+    socket.onerror = (error) => {
+      console.error("SockJS连接错误:", error);
+      // 仅记录错误，让STOMP客户端处理重连
+    };
 
     const client = new Client({
       webSocketFactory: () => socket,
@@ -143,13 +161,15 @@ const HomePage: React.FC = () => {
       debug: function (str) {
         console.log(str);
       },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
+      reconnectDelay: 5000, // 保持原有的重连延迟
+      heartbeatIncoming: 8000, // 增加心跳时间，提高容错性
+      heartbeatOutgoing: 8000,
     });
 
     client.onConnect = () => {
       console.log("已连接到WebSocket服务器");
+      // 更新连接状态为"已连接"
+      setWsConnectionStatus('connected');
 
       // 连接成功后立即获取房间用户列表
       fetchRoomUsers(room);
@@ -202,13 +222,22 @@ const HomePage: React.FC = () => {
     client.onStompError = (frame) => {
       console.error('代理报告错误: ' + frame.headers['message']);
       console.error('额外详情: ' + frame.body);
-      toast.error('连接错误，请稍后再试', {
+      // 更新状态为"失败"，但让客户端自行处理重连
+      setWsConnectionStatus('failed');
+      toast.error('连接错误，正在尝试重新连接...', {
         position: "top-right",
         autoClose: 3000,
       });
     };
 
+    // 添加WebSocket断开连接处理
+    client.onWebSocketClose = () => {
+      console.log("WebSocket连接已关闭，等待重连");
+      // 仅在控制台记录，不改变状态，避免UI抖动
+    };
+
     client.activate();
+    setStompClient(client);
 
     return client;
   }, [fetchRoomUsers, fetchMovies, movies]);
@@ -238,12 +267,14 @@ const HomePage: React.FC = () => {
         setRoomCode(newRoomCode);
         setIsInRoom(true);
         setIsRoomCreator(true); // 设置为房主
+        setCreateRoomModalOpen(false);
+        // 连接前先置状态
+        setWsConnectionStatus('connecting');
         connectToWebSocketServer(newRoomCode);
         toast.success(`房间创建成功! 房间代码: ${newRoomCode}`, {
           position: "top-right",
           autoClose: 3000,
         });
-        setCreateRoomModalOpen(false);
       } else {
         toast.error('创建房间失败: 服务器响应格式不正确', {
           position: "top-right",
@@ -280,12 +311,14 @@ const HomePage: React.FC = () => {
         setRoomCode(roomCodeInput);
         setIsInRoom(true);
         setIsRoomCreator(false); // 不是房主
+        setJoinRoomModalOpen(false);
+        // 连接前先置状态
+        setWsConnectionStatus('connecting');
         connectToWebSocketServer(roomCodeInput);
         toast.success('成功加入房间!', {
           position: "top-right",
           autoClose: 2000,
         });
-        setJoinRoomModalOpen(false);
       } else {
         toast.error('加入房间失败: ' + '未知错误', {
           position: "top-right",
@@ -482,13 +515,26 @@ const HomePage: React.FC = () => {
 
         {/* 视频内容 */}
         <div className="flex-grow m-5 rounded-3xl bg-white shadow-md flex justify-center items-center overflow-hidden relative">
-          {!stompClient ? (
+          {wsConnectionStatus === 'connecting' ? (
+            <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-400 border-t-transparent"></div>
+              <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
+                正在连接到服务器，请稍候...
+              </div>
+            </div>
+          ) : !stompClient || wsConnectionStatus === 'disconnected' || wsConnectionStatus === 'failed' ? (
             <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
               <div className="w-25 h-25 rounded-full bg-purple-100 flex items-center justify-center shadow-lg">
-                <DisconnectIcon style={{ fontSize: 48, color: "#7c4dff", opacity: 0.8 }} />
+                {wsConnectionStatus === 'failed' ? (
+                  <div className="text-red-500 text-5xl">!</div>
+                ) : (
+                  <DisconnectIcon style={{ fontSize: 48, color: "#7c4dff", opacity: 0.8 }} />
+                )}
               </div>
               <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
-                WebSocket未连接。请创建或加入房间以开始您的观影派对。
+                {wsConnectionStatus === 'failed' ?
+                  "连接服务器时遇到问题，正在尝试重新连接..." :
+                  "WebSocket未连接。请创建或加入房间以开始您的观影派对。"}
               </div>
               <div className="flex gap-4 mt-6">
                 {!isInRoom && (
@@ -496,7 +542,7 @@ const HomePage: React.FC = () => {
                     <button
                       onClick={() => setCreateRoomModalOpen(true)}
                       className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
-                      disabled={isLoading}
+                      disabled={isLoading || (wsConnectionStatus as string) === 'connecting'}
                     >
                       {isLoading ? (
                         <span className="animate-pulse">处理中...</span>
@@ -510,12 +556,20 @@ const HomePage: React.FC = () => {
                     <button
                       onClick={() => setJoinRoomModalOpen(true)}
                       className="px-6 py-3 rounded-xl font-bold text-gray-800 bg-white border border-gray-100 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
-                      disabled={isLoading}
+                      disabled={isLoading || (wsConnectionStatus as string) === 'connecting'}
                     >
                       <SearchIcon />
                       <span>加入房间</span>
                     </button>
                   </>
+                )}
+                {wsConnectionStatus === 'failed' && isInRoom && (
+                  <button
+                    onClick={() => connectToWebSocketServer(roomCode)}
+                    className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg"
+                  >
+                    重新连接
+                  </button>
                 )}
               </div>
             </div>
