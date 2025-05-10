@@ -50,8 +50,8 @@ const MovieUploader: React.FC<MovieUploaderProps> = ({ roomCode, onUploadComplet
 
   // 处理电影上传
   const handleUploadMovie = async () => {
-    if (!selectedFile || !movieTitle || !roomCode) {
-      toast.error('请填写电影标题并选择文件', {
+    if (!selectedFile || !movieTitle || !movieDescription || !roomCode) {
+      toast.error('请填写电影标题、描述并选择文件', {
         position: 'top-center',
         autoClose: 2000,
       });
@@ -122,7 +122,7 @@ const MovieUploader: React.FC<MovieUploaderProps> = ({ roomCode, onUploadComplet
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            电影描述 (可选)
+            电影描述 <span className="text-red-500">*</span>
           </label>
           <textarea
             value={movieDescription}
@@ -130,6 +130,7 @@ const MovieUploader: React.FC<MovieUploaderProps> = ({ roomCode, onUploadComplet
             placeholder="输入电影描述"
             className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent h-24 resize-none"
             disabled={isUploading}
+            required
           />
         </div>
 
@@ -202,7 +203,7 @@ const MovieUploader: React.FC<MovieUploaderProps> = ({ roomCode, onUploadComplet
         <button
           onClick={handleUploadMovie}
           className="px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-500 text-white rounded-md hover:shadow-md transition-all"
-          disabled={isUploading || !selectedFile || !movieTitle}
+          disabled={isUploading || !selectedFile || !movieTitle || !movieDescription}
           type="button"
         >
           {isUploading ? (
