@@ -14,6 +14,13 @@ export interface LoginResponse {
   user: User;
 }
 
+
+interface UploadAvatarResponse {
+  url: string;
+  fileName: string;
+}
+
+
 export const authApi = {
   // 登录
   login: (userName: string, userPassword: string) => {
@@ -41,6 +48,20 @@ export const authApi = {
       userPhone,
       userSex
     });
+  },
+
+  // 上传头像
+  uploadAvatar: (file: File, onProgress?: (percentage: number) => void) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    // 添加过期时间参数（7天，以秒为单位）
+    formData.append('expiry', '604800');
+    
+    return apiClient.upload<UploadAvatarResponse>(
+      '/api/sys/minio-upload',
+      formData,
+      onProgress
+    );
   },
 
   // GitHub OAuth相关

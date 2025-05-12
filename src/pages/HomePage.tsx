@@ -51,6 +51,8 @@ const HomePage: React.FC = () => {
     id: "1",
     userName: "当前用户",
     userAvatar: "",
+    userSex: "",
+    userPhone: "",
     email: "",
   });
   const [otherUsers, setOtherUsers] = useState<User[]>([]);
@@ -341,12 +343,15 @@ const HomePage: React.FC = () => {
   const getUserInfo = async () => {
     try {
       const res = await authApi.getUserInfoFromToken();
+      console.log(res);
       if (res && res.id) {
         setCurrentUser({
           id: res.id || "1",
           userName: res.userName || "当前用户",
           userAvatar: res.userAvatar || "",
           email: res.email || "",
+          userSex: res.userSex || '2',
+          userPhone: res.userPhone || ''
         });
         console.log("自动获取用户信息成功");
       } else {
@@ -447,9 +452,22 @@ const HomePage: React.FC = () => {
           ) : otherUsers.length > 0 ? (
             otherUsers.map((user, index) => (
               <div key={user.id || index} className="p-4 rounded-xl mb-3 bg-white/70 transition-all duration-300 hover:bg-white hover:transform hover:translate-x-1 border border-purple-200/30 shadow-sm">
+                {/* 用户头像 */}
                 <div className="flex items-center">
-                  <div className="w-[38px] h-[38px] rounded-full bg-purple-200 flex items-center justify-center shadow-sm">
-                    <UserIcon className="text-purple-700" />
+                  <div className="w-[38px] h-[38px] rounded-full bg-purple-200 flex items-center justify-center shadow-sm overflow-hidden relative">
+                    {user.userAvatar && (
+                      <img
+                        src={user.userAvatar}
+                        alt={user.userName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className={`absolute inset-0 flex items-center justify-center ${user.userAvatar ? 'opacity-0' : 'opacity-100'}`}>
+                      <UserIcon className="text-purple-700" />
+                    </div>
                   </div>
                   <div className="ml-3.5 flex-grow text-gray-700 font-semibold text-sm overflow-hidden whitespace-nowrap text-ellipsis">
                     {user.userName}
@@ -475,8 +493,21 @@ const HomePage: React.FC = () => {
         {/* 当前用户 */}
         <div className="bg-white/80 p-5 border-t border-purple-200/50">
           <div className="flex items-center">
-            <div className="w-[38px] h-[38px] rounded-full bg-purple-200 flex items-center justify-center border-2 border-purple-300 shadow-md">
-              <UserIcon className="text-purple-700" />
+            {/* 用户头像 */}
+            <div className="w-[38px] h-[38px] rounded-full bg-purple-200 flex items-center justify-center shadow-sm overflow-hidden relative">
+              {currentUser.userAvatar && (
+                <img
+                  src={currentUser.userAvatar}
+                  alt={currentUser.userName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
+              <div className={`absolute inset-0 flex items-center justify-center ${currentUser.userAvatar ? 'opacity-0' : 'opacity-100'}`}>
+                <UserIcon className="text-purple-700" />
+              </div>
             </div>
             <div className="ml-3.5 flex-grow text-gray-700 font-bold text-sm overflow-hidden whitespace-nowrap text-ellipsis">
               {currentUser.userName}
