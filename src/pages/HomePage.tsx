@@ -17,6 +17,8 @@ import ProfileSettings from "../components/ProfileSettings";
 const LOCAL_WEBSOCKET_SERVER_URL = WEBSOCKET_SERVER_URL;
 
 const HomePage: React.FC = () => {
+  // 用户信息加载状态
+  const [isUserLoading, setIsUserLoading] = useState<boolean>(true);
   // 路由
   const navigate = useNavigate();
 
@@ -342,6 +344,7 @@ const HomePage: React.FC = () => {
   // 获取用户信息
   const getUserInfo = async () => {
     try {
+      setIsUserLoading(true);
       const res = await authApi.getUserInfoFromToken();
       console.log(res);
       if (res && res.id) {
@@ -369,6 +372,8 @@ const HomePage: React.FC = () => {
         toastId: "login-fail",
       });
       navigate('/login');
+    } finally {
+      setIsUserLoading(false);
     }
   };
 
@@ -493,36 +498,50 @@ const HomePage: React.FC = () => {
         {/* 当前用户 */}
         <div className="bg-white/80 p-5 border-t border-purple-200/50">
           <div className="flex items-center">
-            {/* 用户头像 */}
-            <div className="w-[38px] h-[38px] rounded-full bg-purple-200 flex items-center justify-center shadow-sm overflow-hidden relative">
-              {currentUser.userAvatar && (
-                <img
-                  src={currentUser.userAvatar}
-                  alt={currentUser.userName}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              )}
-              <div className={`absolute inset-0 flex items-center justify-center ${currentUser.userAvatar ? 'opacity-0' : 'opacity-100'}`}>
-                <UserIcon className="text-purple-700" />
-              </div>
-            </div>
-            <div className="ml-3.5 flex-grow text-gray-700 font-bold text-sm overflow-hidden whitespace-nowrap text-ellipsis">
-              {currentUser.userName}
-            </div>
-            <div className="ml-auto flex items-center">
-              <div
-                onClick={toggleMute}
-                className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110"
-              >
-                <AudioIcon isMuted={isMuted} />
-              </div>
-              <div className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110" onClick={openSettings}>
-                <SettingsIcon />
-              </div>
-            </div>
+            {isUserLoading ? (
+              <>
+                {/* Loading skeleton */}
+                <div className="w-[38px] h-[38px] rounded-full bg-gray-200 animate-pulse"></div>
+                <div className="ml-3.5 flex-grow h-5 bg-gray-200 rounded animate-pulse"></div>
+                <div className="ml-auto flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                  <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* 用户头像 */}
+                <div className="w-[38px] h-[38px] rounded-full bg-purple-200 flex items-center justify-center shadow-sm overflow-hidden relative">
+                  {currentUser.userAvatar && (
+                    <img
+                      src={currentUser.userAvatar}
+                      alt={currentUser.userName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
+                  <div className={`absolute inset-0 flex items-center justify-center ${currentUser.userAvatar ? 'opacity-0' : 'opacity-100'}`}>
+                    <UserIcon className="text-purple-700" />
+                  </div>
+                </div>
+                <div className="ml-3.5 flex-grow text-gray-700 font-bold text-sm overflow-hidden whitespace-nowrap text-ellipsis">
+                  {currentUser.userName}
+                </div>
+                <div className="ml-auto flex items-center">
+                  <div
+                    onClick={toggleMute}
+                    className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110"
+                  >
+                    <AudioIcon isMuted={isMuted} />
+                  </div>
+                  <div className="ml-4 text-gray-500 cursor-pointer hover:text-purple-700 transition-all p-1.5 rounded-full hover:bg-purple-100 hover:scale-110" onClick={openSettings}>
+                    <SettingsIcon />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
