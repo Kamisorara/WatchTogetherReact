@@ -48,13 +48,32 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
       setIsLoading(true);
       setUploadProgress(0);
 
+      // 创建一个本地预览URL让用户立即看到他们选择的图片
+      const localPreviewUrl = URL.createObjectURL(file);
+      setAvatarUrl(localPreviewUrl); // 立即显示本地预览
+
       // 使用AuthApi上传头像，添加进度回调
       const response = await authApi.uploadAvatar(file);
+      // 清理本地预览URL
+      URL.revokeObjectURL(localPreviewUrl);
 
-      // 在本地状态中更新头像
+      // 在本地状态中更新头像为服务器返回的URL
       if (response && response.url) {
+        console.log('头像URL:', response.url);
         setAvatarUrl(response.url);
+
+        // 立即更新父组件中的用户头像信息
+        if (onUserUpdate) {
+          onUserUpdate({
+            ...user,
+            userAvatar: response.url
+          });
+        }
+
         toast.success('头像上传成功', { position: "top-center" });
+      } else {
+        console.error('Upload response missing URL:', response);
+        toast.error('头像上传异常，请重试', { position: "top-center" });
       }
     } catch (error) {
       console.error('上传头像失败', error);
@@ -104,7 +123,11 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
               src={avatarUrl}
               alt={user.userName}
               className="w-full h-full object-cover"
-              onError={() => setAvatarUrl('')}
+              onError={(e) => {
+                console.error('Error loading avatar image:', e);
+                console.log('Failed avatar URL:', avatarUrl);
+                setAvatarUrl('');
+              }}
             />
           ) : (
             <UserIcon className="text-purple-700" style={{ fontSize: 30 }} />
@@ -171,7 +194,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 onChange={() => setUserSex("1")}
                 className="mr-2 text-purple-600 focus:ring-purple-500"
               />
-              男士
+              男
             </label>
             <label className="flex items-center">
               <input
@@ -182,7 +205,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 onChange={() => setUserSex("2")}
                 className="mr-2 text-purple-600 focus:ring-purple-500"
               />
-              女士
+              女
             </label>
             <label className="flex items-center">
               <input
