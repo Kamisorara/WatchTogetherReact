@@ -789,6 +789,7 @@ const HomePage: React.FC = () => {
           isMuted={isMuted}
           toggleMute={toggleMute}
           onClose={closeSettings}
+          onUserUpdate={() => getUserInfo()}
         />
       </Dialog>
     </div>

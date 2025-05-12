@@ -8,7 +8,7 @@ interface ProfileSettingsProps {
   isMuted: boolean;
   toggleMute: () => void;
   onClose: () => void;
-  onUserUpdate?: (updatedUser: User) => void;
+  onUserUpdate?: (updatedUser: User) => void; // 保存修改后回调
 }
 
 const ProfileSettings: React.FC<ProfileSettingsProps> = ({
