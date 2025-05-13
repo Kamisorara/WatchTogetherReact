@@ -10,7 +10,7 @@ import { roomApi, MovieProps } from "../apis/room/RoomApi";
 import MovieUploader from "../components/MovieUploader";
 
 // 图标
-import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon, FilmIcon, FileUploadIcon } from "../components/Icons";
+import { PlusCircleIcon, SearchIcon, UserIcon, SettingsIcon, AudioIcon, PhoneIcon, DisconnectIcon, FilmIcon, FileUploadIcon, LogoutIcon } from "../components/Icons";
 import { useNavigate } from "react-router-dom";
 import ProfileSettings from "../components/ProfileSettings";
 
@@ -29,7 +29,7 @@ const HomePage: React.FC = () => {
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // 添加WebSocket连接状态
+  // WebSocket连接状态
   const [wsConnectionStatus, setWsConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
 
   // 电影相关状态
@@ -59,11 +59,36 @@ const HomePage: React.FC = () => {
   });
   const [otherUsers, setOtherUsers] = useState<User[]>([]);
 
-  // 添加麦克风状态
+  // 麦克风状态
   const [isMuted, setIsMuted] = useState<boolean>(false);
 
-  // 添加电影上传相关状态
+  // 电影上传相关状态
   const [showUploadMovieDialog, setShowUploadMovieDialog] = useState<boolean>(false);
+
+  // 退出登录处理函数
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      await authApi.logout();
+      // 清除本地存储的 token
+      localStorage.removeItem("token");
+      // 显示消息
+      toast.success('已成功退出登录', {
+        position: "top-right",
+        autoClose: 2000,
+      });
+      // 重定向到登录页面
+      navigate('/login');
+    } catch (error) {
+      console.error("退出登录失败", error);
+      toast.error('退出登录失败，请重试', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 获取电影列表
   const fetchMovies = useCallback(async () => {
@@ -394,50 +419,62 @@ const HomePage: React.FC = () => {
   return (
     <div className="flex flex-row h-screen bg-gray-50 overflow-hidden">
       {/* 侧边栏 */}
-      <div className="min-w-[80px] bg-gradient-to-b from-purple-400 to-purple-700 py-6 flex flex-col items-center shadow-lg z-10">
-        <div className="text-2xl font-bold mb-9 text-white w-14 h-14 flex items-center justify-center bg-white/20 backdrop-blur-md rounded-2xl transition-all duration-300 ease-out shadow-md hover:transform hover:-translate-y-1 hover:scale-105 hover:shadow-lg">
-          WT
+      <div className="min-w-[80px] bg-gradient-to-b from-purple-400 to-purple-700 py-6 flex flex-col items-center justify-between shadow-lg z-10">
+        {/* 顶部内容 */}
+        <div className="flex flex-col items-center">
+          <div className="text-2xl font-bold mb-9 text-white w-14 h-14 flex items-center justify-center bg-white/20 backdrop-blur-md rounded-2xl transition-all duration-300 ease-out shadow-md hover:transform hover:-translate-y-1 hover:scale-105 hover:shadow-lg">
+            WT
+          </div>
+
+          {/* 创建房间按钮 */}
+          {!isInRoom && (
+            <div
+              className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
+              onClick={() => setCreateRoomModalOpen(true)}
+            >
+              <PlusCircleIcon style={{ fontSize: 24 }} />
+            </div>
+          )}
+
+          {/* 加入房间按钮 */}
+          {!isInRoom && (
+            <div
+              className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
+              onClick={() => setJoinRoomModalOpen(true)}
+            >
+              <SearchIcon style={{ fontSize: 24 }} />
+            </div>
+          )}
+
+          {/* 已在房间内且是创建者，显示选择电影按钮 */}
+          {isInRoom && (
+            <div
+              className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
+              onClick={() => setShowMovieSelector(true)}
+            >
+              <FilmIcon style={{ fontSize: 24 }} />
+            </div>
+          )}
+
+          {/* 上传电影按钮 - 显示给所有在房间中的用户 */}
+          {isInRoom && (
+            <div
+              className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
+              onClick={() => setShowUploadMovieDialog(true)}
+            >
+              <FileUploadIcon style={{ fontSize: 24 }} />
+            </div>
+          )}
         </div>
 
-        {/* 创建房间按钮 */}
-        {!isInRoom && (
-          <div
-            className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
-            onClick={() => setCreateRoomModalOpen(true)}
-          >
-            <PlusCircleIcon style={{ fontSize: 24 }} />
-          </div>
-        )}
-
-        {/* 加入房间按钮 */}
-        {!isInRoom && (
-          <div
-            className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
-            onClick={() => setJoinRoomModalOpen(true)}
-          >
-            <SearchIcon style={{ fontSize: 24 }} />
-          </div>
-        )}
-
-        {/* 已在房间内且是创建者，显示选择电影按钮 */}
-        {isInRoom && (
-          <div
-            className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
-            onClick={() => setShowMovieSelector(true)}
-          >
-            <FilmIcon style={{ fontSize: 24 }} />
-          </div>
-        )}
-
-        {/* 上传电影按钮 - 显示给所有在房间中的用户 */}
-        {isInRoom && (
-          <div
-            className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md"
-            onClick={() => setShowUploadMovieDialog(true)}
-          >
-            <FileUploadIcon style={{ fontSize: 24 }} />
-          </div>
-        )}
+        {/* 底部添加退出登录按钮 */}
+        <div
+          className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md hover:text-red-100"
+          onClick={handleLogout}
+          title="退出登录"
+        >
+          <LogoutIcon style={{ fontSize: 24 }} />
+        </div>
       </div>
 
       {/* 频道/用户列表 */}

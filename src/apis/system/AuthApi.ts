@@ -37,6 +37,11 @@ export const authApi = {
     });
   },
 
+  // 退出登录
+  logout: () => {
+    return apiClient.post('/api/sys/logout');
+  },
+
   // 根据Token获取用户信息
   getUserInfoFromToken: () => {
     return apiClient.get<User>('/api/sys/user-info');
@@ -56,7 +61,7 @@ export const authApi = {
     formData.append('file', file);
     // 添加过期时间参数（7天，以秒为单位）
     formData.append('expiry', '604800');
-    
+
     return apiClient.upload<UploadAvatarResponse>(
       '/api/sys/minio-upload',
       formData,
