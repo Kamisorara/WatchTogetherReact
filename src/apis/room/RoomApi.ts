@@ -19,6 +19,7 @@ export interface MovieProps {
 export interface JoinRoomResponse {
   message: string;
   currentMovie: MovieProps | null; // 当前播放的电影
+  isCreator: boolean; // 加入者是否是房主
 }
 
 export const roomApi = {

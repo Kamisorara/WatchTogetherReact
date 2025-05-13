@@ -221,6 +221,58 @@ const HomePage: React.FC = () => {
         }
       });
 
+      // 订阅房间状态更新（包括房主变更）
+      client.subscribe(`/topic/room-status/${room}`, (message) => {
+        try {
+          const payload = JSON.parse(message.body);
+          console.log("房间状态更新:", payload);
+
+          // 处理房主变更消息
+          if (payload.type === "OWNER_CHANGED") {
+            console.log("房主已变更:", payload);
+
+            // 如果当前用户是新房主
+            if (payload.newOwnerId === currentUser.id) {
+              setIsRoomCreator(true);
+              toast.info("您已成为房间的新房主！", {
+                position: "top-center",
+                autoClose: 3000,
+              });
+            } else {
+              setIsRoomCreator(false);
+              toast.info(`房间房主已更换`, {
+                position: "top-center",
+                autoClose: 3000,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("处理房间状态消息失败:", error);
+        }
+      });
+
+      // 订阅个人房间状态消息
+      client.subscribe(`/user/queue/room-status/${room}`, (message) => {
+        try {
+          const statusData = JSON.parse(message.body);
+          console.log("收到个人房间状态:", statusData);
+
+          // 根据消息更新房主状态
+          if (statusData.isCreator !== undefined) {
+            setIsRoomCreator(statusData.isCreator);
+
+            if (statusData.isCreator) {
+              toast.success("您已被指定为房间的房主！", {
+                position: "top-center",
+                autoClose: 2000,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("处理个人房间状态消息失败:", error);
+        }
+      });
+
       // 订阅电影选择消息
       client.subscribe(`/topic/movie-select/${room}`, (message) => {
         try {
@@ -273,7 +325,7 @@ const HomePage: React.FC = () => {
     setStompClient(client);
 
     return client;
-  }, [fetchRoomUsers, fetchMovies, movies]);
+  }, [fetchRoomUsers, fetchMovies, movies, currentUser.id]);
 
   // 添加切换麦克风状态的函数
   const toggleMute = () => {
