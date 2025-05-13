@@ -5,7 +5,7 @@ interface VideoPlayerProps {
   stompClient: Client | null;
   roomCode: string;
   videoUrl: string;
-  isRoomCreator: boolean; // Add this new prop
+  isRoomCreator: boolean;
 }
 
 interface ControlProps {
@@ -23,11 +23,30 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
   const [isControlledByServer, setIsControlledByServer] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialSyncRequested, setInitialSyncRequested] = useState(false);
+
+  // 主动请求同步播放进度
+  const requestInitialSync = useCallback(() => {
+    if (!stompClient || isRoomCreator || initialSyncRequested) return;
+
+    console.log("新用户加入，请求房主当前播放进度...");
+    setInitialSyncRequested(true);
+
+    stompClient.publish({
+      destination: `/app/sync-request/${roomCode}`,
+      body: JSON.stringify({ requestTime: new Date().getTime() }),
+    });
+  }, [stompClient, roomCode, isRoomCreator, initialSyncRequested]);
 
   // 视频加载成功处理
   const handleVideoLoaded = () => {
     setIsLoading(false);
     setError(null);
+
+    // 非房主加入时，请求当前播放进度
+    if (!isRoomCreator && stompClient) {
+      requestInitialSync();
+    }
   };
 
   // 视频加载错误处理
@@ -133,15 +152,63 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
       }
     );
 
+    // 订阅同步请求响应
+    const initialSyncSubscription = stompClient.subscribe(
+      `/user/queue/sync-response/${roomCode}`,
+      (message: IMessage) => {
+        try {
+          console.log("收到房主同步数据");
+          const syncData = JSON.parse(message.body);
+
+          if (videoRef.current && !isRoomCreator) {
+            // 设置进度
+            videoRef.current.currentTime = syncData.currentTime;
+
+            // 设置播放状态
+            if (syncData.isPlaying) {
+              videoRef.current.play().catch(err => {
+                console.error("自动播放失败:", err);
+              });
+            } else {
+              videoRef.current.pause();
+            }
+          }
+        } catch (error) {
+          console.error("处理初始同步数据失败:", error);
+        }
+      }
+    );
+
+    // 针对房主的同步请求处理
+    const syncRequestSubscription = isRoomCreator ? stompClient.subscribe(
+      `/topic/sync-request/${roomCode}`,
+      () => {
+        if (videoRef.current && isRoomCreator) {
+          const currentTime = videoRef.current.currentTime;
+          const isPlaying = !videoRef.current.paused;
+
+          stompClient.publish({
+            destination: `/app/sync-response/${roomCode}`,
+            body: JSON.stringify({
+              currentTime: currentTime,
+              isPlaying: isPlaying
+            }),
+          });
+        }
+      }
+    ) : { unsubscribe: () => { } };
+
     // 定时同步进度
     const interval = setInterval(syncVideoToServer, SYNC_INTERVAL);
 
     // 清理函数
     return () => {
       subscription.unsubscribe();
+      initialSyncSubscription.unsubscribe();
+      syncRequestSubscription.unsubscribe();
       clearInterval(interval);
     };
-  }, [stompClient, roomCode, isControlledByServer, syncVideoToServer]);
+  }, [stompClient, roomCode, isControlledByServer, syncVideoToServer, isRoomCreator, requestInitialSync]);
 
   return (
     <div className="w-full h-full flex items-center justify-center bg-black relative">
@@ -161,7 +228,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
 
       <video
         className="max-h-full max-w-full"
-        controls={isRoomCreator} // Only show controls for room creator
+        controls={isRoomCreator}
         ref={videoRef}
         onPlay={handlePlay}
         onPause={handlePause}

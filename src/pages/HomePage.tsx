@@ -6,7 +6,7 @@ import Dialog from "../components/dialog";
 import { authApi, User } from "../apis/system/AuthApi";
 import { toast } from 'react-toastify';
 import { WEBSOCKET_SERVER_URL } from "../service/ipAddress";
-import { roomApi, MovieProps } from "../apis/room/RoomApi";
+import { roomApi, MovieProps, JoinRoomResponse } from "../apis/room/RoomApi";
 import MovieUploader from "../components/MovieUploader";
 
 // 图标
@@ -338,13 +338,23 @@ const HomePage: React.FC = () => {
 
       setIsLoading(true);
       // 调用API加入房间
-      const response: string = await roomApi.joinRoom(roomCodeInput);
+      const response: JoinRoomResponse = await roomApi.joinRoom(roomCodeInput);
       console.log(response)
       if (response) {
         setRoomCode(roomCodeInput);
         setIsInRoom(true);
         setIsRoomCreator(false); // 不是房主
         setJoinRoomModalOpen(false);
+
+        // 检查并加载当前正在播放的电影
+        if (response.currentMovie) {
+          setSelectedMovie(response.currentMovie);
+          toast.info(`房间正在播放: ${response.currentMovie.title}`, {
+            position: "top-center",
+            autoClose: 2000,
+          });
+        }
+
         // 连接前先置状态
         setWsConnectionStatus('connecting');
         connectToWebSocketServer(roomCodeInput);

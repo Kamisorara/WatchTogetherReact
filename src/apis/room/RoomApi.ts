@@ -16,6 +16,11 @@ export interface MovieProps {
   fileSize?: number; // 可选：文件大小，便于前端显示
 };
 
+export interface JoinRoomResponse {
+  message: string;
+  currentMovie: MovieProps | null; // 当前播放的电影
+}
+
 export const roomApi = {
   // 创建房间
   createRoom: () => {
@@ -24,7 +29,7 @@ export const roomApi = {
 
   // 加入房间
   joinRoom: (roomCode: string) => {
-    return apiClient.post<string>('/room/join', { roomCode });
+    return apiClient.post<JoinRoomResponse>('/room/join', { roomCode });
   },
 
   // 获取房间内的所有用户
