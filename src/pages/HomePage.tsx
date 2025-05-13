@@ -65,6 +65,9 @@ const HomePage: React.FC = () => {
   // 电影上传相关状态
   const [showUploadMovieDialog, setShowUploadMovieDialog] = useState<boolean>(false);
 
+  // 添加退出登录确认对话框状态
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
+
   // 退出登录处理函数
   const handleLogout = async () => {
     try {
@@ -467,10 +470,10 @@ const HomePage: React.FC = () => {
           )}
         </div>
 
-        {/* 底部添加退出登录按钮 */}
+        {/* 修改退出登录按钮点击事件，显示确认对话框而不是直接退出 */}
         <div
           className="w-14 h-14 mb-6 bg-white/15 rounded-2xl flex justify-center items-center text-white cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-md hover:text-red-100"
-          onClick={handleLogout}
+          onClick={() => setShowLogoutConfirm(true)}
           title="退出登录"
         >
           <LogoutIcon style={{ fontSize: 24 }} />
@@ -847,6 +850,40 @@ const HomePage: React.FC = () => {
           onClose={closeSettings}
           onUserUpdate={() => getUserInfo()}
         />
+      </Dialog>
+
+      {/* 退出登录确认对话框 */}
+      <Dialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        title="确认退出"
+        size="sm"
+      >
+        <div className="mb-6 text-center text-gray-600">
+          确定要退出登录吗？
+        </div>
+        <div className="flex justify-center gap-4 pt-2">
+          <button
+            onClick={() => setShowLogoutConfirm(false)}
+            className="px-6 py-3 rounded-xl font-medium text-gray-700 bg-white border border-gray-200 shadow-sm transition-all hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleLogout}
+            className="px-6 py-3 rounded-xl font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg hover:from-purple-600 hover:to-purple-700"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center">
+                <div className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                处理中...
+              </div>
+            ) : (
+              '确认退出'
+            )}
+          </button>
+        </div>
       </Dialog>
     </div>
   );
