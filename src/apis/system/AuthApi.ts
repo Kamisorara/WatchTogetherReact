@@ -42,6 +42,14 @@ export const authApi = {
     return apiClient.post('/api/sys/logout');
   },
 
+  // 更新用户密码
+  updatePassword: (newPassword: string, confirmPassword: string) => {
+    return apiClient.post<boolean>('/api/sys/update-password', {
+      newPassword,
+      confirmPassword
+    });
+  },
+
   // 根据Token获取用户信息
   getUserInfoFromToken: () => {
     return apiClient.get<User>('/api/sys/user-info');
