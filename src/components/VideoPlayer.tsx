@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface VideoPlayerProps {
   stompClient: Client | null;
   roomCode: string;
-  videoUrl: string; // 新增视频 URL 参数
+  videoUrl: string;
+  isRoomCreator: boolean; // Add this new prop
 }
 
 interface ControlProps {
@@ -12,7 +13,7 @@ interface ControlProps {
   time: number;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoUrl }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoUrl, isRoomCreator }) => {
   // 允许的时间差 1.5秒
   const SYNC_THRESHOLD = 1.5;
   // 同步间隔 2秒
@@ -37,7 +38,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
 
   // 开始播放处理
   const handlePlay = () => {
-    if (!videoRef.current || isControlledByServer) return;
+    if (!videoRef.current || isControlledByServer || !isRoomCreator) return;
 
     setIsControlledByServer(true);
     const currTime = videoRef.current.currentTime;
@@ -53,7 +54,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
 
   // 处理播放暂停
   const handlePause = () => {
-    if (!videoRef.current || isControlledByServer) return;
+    if (!videoRef.current || isControlledByServer || !isRoomCreator) return;
 
     setIsControlledByServer(true);
     const currentTime = videoRef.current.currentTime;
@@ -68,7 +69,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
 
   // 处理进度条拖动
   const handleSeeked = () => {
-    if (!videoRef.current || isControlledByServer) return;
+    if (!videoRef.current || isControlledByServer || !isRoomCreator) return;
 
     setIsControlledByServer(true);
     const currentTime = videoRef.current.currentTime;
@@ -86,14 +87,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
 
   // 同步进度到服务器
   const syncVideoToServer = useCallback(() => {
-    if (videoRef.current && !videoRef.current.paused && !isControlledByServer) {
+    if (videoRef.current && !videoRef.current.paused && !isControlledByServer && isRoomCreator) {
       const currentTime = videoRef.current.currentTime;
       stompClient?.publish({
         destination: `/app/video-control/${roomCode}`,
         body: JSON.stringify({ action: 'sync', time: currentTime }),
       });
     }
-  }, [stompClient, roomCode, isControlledByServer]);
+  }, [stompClient, roomCode, isControlledByServer, isRoomCreator]);
 
   useEffect(() => {
     if (!stompClient) return;
@@ -160,7 +161,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
 
       <video
         className="max-h-full max-w-full"
-        controls
+        controls={isRoomCreator} // Only show controls for room creator
         ref={videoRef}
         onPlay={handlePlay}
         onPause={handlePause}
@@ -171,6 +172,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
       >
         你的浏览器不支持这个视频播放
       </video>
+
+      {!isRoomCreator && (
+        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-center py-2">
+          只有房主可以控制视频播放
+        </div>
+      )}
     </div>
   );
 };

@@ -665,7 +665,12 @@ const HomePage: React.FC = () => {
               </div>
             </div>
           ) : selectedMovie ? (
-            <VideoPlayer stompClient={stompClient} roomCode={roomCode} videoUrl={selectedMovie.videoUrl} />
+            <VideoPlayer
+              stompClient={stompClient}
+              roomCode={roomCode}
+              videoUrl={selectedMovie.videoUrl}
+              isRoomCreator={isRoomCreator} // Pass the isRoomCreator prop
+            />
           ) : (
             <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
               <div className="w-25 h-25 rounded-full bg-purple-100 flex items-center justify-center shadow-lg">
