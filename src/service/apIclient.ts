@@ -1,6 +1,7 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { API_URL } from './ipAddress';
+import { toast } from 'react-toastify'; // Add this import at the top
 
 const API_BASE_URL: string = API_URL;
 
@@ -212,6 +213,17 @@ axiosInstance.interceptors.response.use(
           break;
         case 404:
           errorMessage = '请求的资源不存在';
+          break;
+        case 429:
+          errorMessage = '请求过于频繁，请稍后再试';
+          toast.warning('操作太频繁，请稍等片刻再试', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
           break;
         case 500:
           errorMessage = '服务器内部错误';
