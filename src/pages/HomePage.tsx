@@ -192,9 +192,9 @@ const HomePage: React.FC = () => {
         token: localStorage.getItem("token") || "",
         roomCode: room,
       },
-      debug: function (str) {
-        console.log(str);
-      },
+      // debug: function (str) {
+      //   console.log(str);
+      // },
       reconnectDelay: 5000, // 保持原有的重连延迟
       heartbeatIncoming: 8000, // 增加心跳时间，提高容错性
       heartbeatOutgoing: 8000,
