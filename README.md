@@ -17,3 +17,5 @@ npm run dev
 npm run dev
 ```
 
+### 系统架构图
+![img1.jpg](img/img1.jpg)
