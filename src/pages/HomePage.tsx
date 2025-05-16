@@ -49,6 +49,10 @@ const HomePage: React.FC = () => {
   const openSettings = () => setIsSettingsOpen(true);
   const closeSettings = () => setIsSettingsOpen(false);
 
+  // 强制轮询状态
+  const [forcePolling, setForcePolling] = useState<boolean>(false);
+
+
   // 用户状态
   const [currentUser, setCurrentUser] = useState<User>({
     id: "1",
@@ -173,14 +177,30 @@ const HomePage: React.FC = () => {
     // 设置连接状态为"连接中"
     setWsConnectionStatus('connecting');
 
-    const socket = new SockJS(LOCAL_WEBSOCKET_SERVER_URL);
+    // 强制使用轮询
+    const socketOptions = {
+      transports: forcePolling
+        ? ['xhr-streaming', 'xhr-polling']
+        : undefined, // undefined 让 SockJS 使用默认顺序
+      timeout: 10000
+    };
+
+    // 创建 SockJS 实例，启用所有可能的传输方式
+    const socket = new SockJS(LOCAL_WEBSOCKET_SERVER_URL, null, socketOptions);
 
     // 监听SockJS原生事件
     socket.onopen = () => console.log("SockJS连接已打开");
-    socket.onclose = () => {
-      console.log("SockJS连接已关闭");
-      // 注意：这里不设置状态，因为STOMP客户端会处理重连
+
+    socket.onclose = (event) => {
+      console.log("SockJS连接已关闭, 代码:", event.code, "原因:", event.reason);
+      // 常见 WebSocket 关闭代码的处理
+      if (event.code === 1006) {
+        console.log("异常关闭 - 可能是网络限制导致");
+      } else if (event.code === 1001) {
+        console.log("正常关闭 - 客户端主动断开");
+      }
     };
+
     socket.onerror = (error) => {
       console.error("SockJS连接错误:", error);
       // 仅记录错误，让STOMP客户端处理重连
@@ -192,12 +212,11 @@ const HomePage: React.FC = () => {
         token: localStorage.getItem("token") || "",
         roomCode: room,
       },
-      // debug: function (str) {
-      //   console.log(str);
-      // },
-      reconnectDelay: 5000, // 保持原有的重连延迟
-      heartbeatIncoming: 8000, // 增加心跳时间，提高容错性
-      heartbeatOutgoing: 8000,
+      // 减少心跳间隔，提高频率以保持连接活跃
+      heartbeatIncoming: 5000,
+      heartbeatOutgoing: 5000,
+      // 减小重连延迟，更快地尝试恢复连接
+      reconnectDelay: 2000,
     });
 
     client.onConnect = () => {
@@ -308,12 +327,19 @@ const HomePage: React.FC = () => {
     client.onStompError = (frame) => {
       console.error('代理报告错误: ' + frame.headers['message']);
       console.error('额外详情: ' + frame.body);
-      // 更新状态为"失败"，但让客户端自行处理重连
       setWsConnectionStatus('failed');
       toast.error('连接错误，正在尝试重新连接...', {
         position: "top-right",
         autoClose: 3000,
       });
+
+      // 记录具体错误类型，帮助诊断问题
+      const errorDetails = {
+        message: frame.headers['message'],
+        body: frame.body,
+        timestamp: new Date().toISOString()
+      };
+      console.log("STOMP错误详情:", errorDetails);
     };
 
     // 添加WebSocket断开连接处理
@@ -326,7 +352,7 @@ const HomePage: React.FC = () => {
     setStompClient(client);
 
     return client;
-  }, [fetchRoomUsers, fetchMovies, movies, currentUser.id]);
+  }, [fetchRoomUsers, fetchMovies, movies, currentUser.id, forcePolling]);
 
   // 添加切换麦克风状态的函数
   const toggleMute = () => {
@@ -751,6 +777,49 @@ const HomePage: React.FC = () => {
                   <span>选择电影</span>
                 </button>
               )}
+            </div>
+          )}
+
+          {/* 连接失败状态时 */}
+          {wsConnectionStatus === 'failed' && (
+            <div className="mt-4 flex flex-col items-center space-y-3">
+              <button
+                onClick={() => connectToWebSocketServer(roomCode)}
+                className="px-4 py-2 rounded-lg font-medium text-white bg-purple-500 hover:bg-purple-600"
+              >
+                重试连接
+              </button>
+
+              <div className="flex items-center space-x-2 text-sm">
+                <input
+                  type="checkbox"
+                  id="force-polling"
+                  checked={forcePolling}
+                  onChange={() => setForcePolling(!forcePolling)}
+                  className="rounded text-purple-500 focus:ring-purple-500"
+                />
+                <label htmlFor="force-polling">
+                  强制使用轮询模式 (适用于阻止WebSocket的网络)
+                </label>
+              </div>
+
+              <button
+                onClick={() => {
+                  // 显示详细的连接诊断信息
+                  console.log("连接诊断信息", {
+                    browserInfo: navigator.userAgent,
+                    wsStatus: wsConnectionStatus,
+                    timeStamp: new Date().toISOString()
+                  });
+                  toast.info('诊断信息已记录到控制台', {
+                    position: "top-right",
+                    autoClose: 2000,
+                  });
+                }}
+                className="text-xs text-purple-600 underline"
+              >
+                诊断连接问题
+              </button>
             </div>
           )}
         </div>
