@@ -107,3 +107,19 @@ export const LogoutIcon: React.FC<IconProps> = ({ style, className }) => (
     <line x1="21" y1="12" x2="9" y2="12"></line>
   </svg>
 );
+
+export const ChatIcon = ({ className = "" }: { className?: string }) => (
+  <svg
+    className={className}
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
