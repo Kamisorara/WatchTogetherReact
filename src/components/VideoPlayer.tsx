@@ -227,7 +227,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ stompClient, roomCode, videoU
       )}
 
       <video
-        className="max-h-full max-w-full"
+        className="max-h-full max-w-full w-auto h-auto object-contain"
         controls={isRoomCreator}
         ref={videoRef}
         onPlay={handlePlay}

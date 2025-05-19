@@ -754,94 +754,98 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* 修改视频内容区域为可分割布局 */}
-        <div className="flex-grow m-5 flex">
+        {/* 视频内容区域 */}
+        <div className="flex-grow m-5 flex h-0"> {/* 强制高度由 flex 控制 */}
           {/* 视频区域 - 根据聊天面板是否打开调整宽度 */}
           <div className={`${isChatOpen ? 'w-2/3' : 'w-full'} rounded-3xl bg-white shadow-md flex justify-center items-center overflow-hidden relative transition-all duration-300`}>
-            {wsConnectionStatus === 'connecting' ? (
-              <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-400 border-t-transparent"></div>
-                <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
-                  正在连接到服务器，请稍候...
+            <div className="w-full h-full flex justify-center items-center max-w-full max-h-full overflow-hidden">
+              {wsConnectionStatus === 'connecting' ? (
+                <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-400 border-t-transparent"></div>
+                  <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
+                    正在连接到服务器，请稍候...
+                  </div>
                 </div>
-              </div>
-            ) : !stompClient || wsConnectionStatus === 'disconnected' || wsConnectionStatus === 'failed' ? (
-              <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
-                <div className="w-25 h-25 rounded-full bg-purple-100 flex items-center justify-center shadow-lg">
-                  {wsConnectionStatus === 'failed' ? (
-                    <div className="text-red-500 text-5xl">!</div>
-                  ) : (
-                    <DisconnectIcon style={{ fontSize: 48, color: "#7c4dff", opacity: 0.8 }} />
-                  )}
-                </div>
-                <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
-                  {wsConnectionStatus === 'failed' ?
-                    "连接服务器时遇到问题，正在尝试重新连接..." :
-                    "WebSocket未连接。请创建或加入房间以开始您的观影派对。"}
-                </div>
-                <div className="flex gap-4 mt-6">
-                  {!isInRoom && (
-                    <>
+              ) : !stompClient || wsConnectionStatus === 'disconnected' || wsConnectionStatus === 'failed' ? (
+                <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
+                  <div className="w-25 h-25 rounded-full bg-purple-100 flex items-center justify-center shadow-lg">
+                    {wsConnectionStatus === 'failed' ? (
+                      <div className="text-red-500 text-5xl">!</div>
+                    ) : (
+                      <DisconnectIcon style={{ fontSize: 48, color: "#7c4dff", opacity: 0.8 }} />
+                    )}
+                  </div>
+                  <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
+                    {wsConnectionStatus === 'failed' ?
+                      "连接服务器时遇到问题，正在尝试重新连接..." :
+                      "WebSocket未连接。请创建或加入房间以开始您的观影派对。"}
+                  </div>
+                  <div className="flex gap-4 mt-6">
+                    {!isInRoom && (
+                      <>
+                        <button
+                          onClick={() => setCreateRoomModalOpen(true)}
+                          className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
+                          disabled={isLoading || (wsConnectionStatus as string) === 'connecting'}
+                        >
+                          {isLoading ? (
+                            <span className="animate-pulse">处理中...</span>
+                          ) : (
+                            <>
+                              <PlusCircleIcon />
+                              <span>创建房间</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setJoinRoomModalOpen(true)}
+                          className="px-6 py-3 rounded-xl font-bold text-gray-800 bg-white border border-gray-100 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
+                          disabled={isLoading || (wsConnectionStatus as string) === 'connecting'}
+                        >
+                          <SearchIcon />
+                          <span>加入房间</span>
+                        </button>
+                      </>
+                    )}
+                    {wsConnectionStatus === 'failed' && isInRoom && (
                       <button
-                        onClick={() => setCreateRoomModalOpen(true)}
-                        className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
-                        disabled={isLoading || (wsConnectionStatus as string) === 'connecting'}
+                        onClick={() => connectToWebSocketServer(roomCode)}
+                        className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg"
                       >
-                        {isLoading ? (
-                          <span className="animate-pulse">处理中...</span>
-                        ) : (
-                          <>
-                            <PlusCircleIcon />
-                            <span>创建房间</span>
-                          </>
-                        )}
+                        重新连接
                       </button>
-                      <button
-                        onClick={() => setJoinRoomModalOpen(true)}
-                        className="px-6 py-3 rounded-xl font-bold text-gray-800 bg-white border border-gray-100 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
-                        disabled={isLoading || (wsConnectionStatus as string) === 'connecting'}
-                      >
-                        <SearchIcon />
-                        <span>加入房间</span>
-                      </button>
-                    </>
-                  )}
-                  {wsConnectionStatus === 'failed' && isInRoom && (
+                    )}
+                  </div>
+                </div>
+              ) : selectedMovie ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <VideoPlayer
+                    stompClient={stompClient}
+                    roomCode={roomCode}
+                    videoUrl={selectedMovie.videoUrl}
+                    isRoomCreator={isRoomCreator}
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
+                  <div className="w-25 h-25 rounded-full bg-purple-100 flex items-center justify-center shadow-lg">
+                    <FilmIcon style={{ fontSize: 48, color: "#7c4dff", opacity: 0.8 }} />
+                  </div>
+                  <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
+                    {isRoomCreator ? "请选择一部电影开始观看" : "等待房主选择电影..."}
+                  </div>
+                  {isRoomCreator && (
                     <button
-                      onClick={() => connectToWebSocketServer(roomCode)}
-                      className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg"
+                      onClick={() => setShowMovieSelector(true)}
+                      className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
                     >
-                      重新连接
+                      <FilmIcon />
+                      <span>选择电影</span>
                     </button>
                   )}
                 </div>
-              </div>
-            ) : selectedMovie ? (
-              <VideoPlayer
-                stompClient={stompClient}
-                roomCode={roomCode}
-                videoUrl={selectedMovie.videoUrl}
-                isRoomCreator={isRoomCreator}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
-                <div className="w-25 h-25 rounded-full bg-purple-100 flex items-center justify-center shadow-lg">
-                  <FilmIcon style={{ fontSize: 48, color: "#7c4dff", opacity: 0.8 }} />
-                </div>
-                <div className="max-w-xs text-center text-gray-700 leading-relaxed font-medium">
-                  {isRoomCreator ? "请选择一部电影开始观看" : "等待房主选择电影..."}
-                </div>
-                {isRoomCreator && (
-                  <button
-                    onClick={() => setShowMovieSelector(true)}
-                    className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-500 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg flex items-center gap-2"
-                  >
-                    <FilmIcon />
-                    <span>选择电影</span>
-                  </button>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* 聊天面板 - 仅当isChatOpen为true时显示 */}
