@@ -757,7 +757,10 @@ const HomePage: React.FC = () => {
         {/* 视频内容区域 */}
         <div className="flex-grow m-5 flex h-0"> {/* 强制高度由 flex 控制 */}
           {/* 视频区域 - 根据聊天面板是否打开调整宽度 */}
-          <div className={`${isChatOpen ? 'w-2/3' : 'w-full'} rounded-3xl bg-white shadow-md flex justify-center items-center overflow-hidden relative transition-all duration-300`}>
+          <div
+            className={`rounded-3xl bg-white shadow-md flex justify-center items-center overflow-hidden relative transition-all duration-300 ease-in-out ${isChatOpen ? 'w-2/3' : 'w-full'
+              }`}
+          >
             <div className="w-full h-full flex justify-center items-center max-w-full max-h-full overflow-hidden">
               {wsConnectionStatus === 'connecting' ? (
                 <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-gradient-to-br from-purple-50 to-purple-100 p-15">
@@ -848,17 +851,21 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* 聊天面板 - 仅当isChatOpen为true时显示 */}
-          {isChatOpen && isInRoom && stompClient && (
-            <div className="w-1/3 ml-5 rounded-3xl bg-white shadow-md overflow-hidden transition-all duration-300">
+          {/* 聊天面板 - 总是渲染但根据状态控制宽度和可见性 */}
+          <div
+            className={`rounded-3xl bg-white shadow-md overflow-hidden transition-all duration-300 ease-in-out ml-5 ${isChatOpen ? 'w-1/3 opacity-100 transform translate-x-0' : 'w-0 opacity-0 transform translate-x-10 overflow-hidden'
+              }`}
+          >
+            {/* 只在面板打开时渲染内容，避免不必要的渲染 */}
+            {isChatOpen && isInRoom && stompClient && (
               <ChatPanel
                 stompClient={stompClient}
                 roomCode={roomCode}
                 currentUser={currentUser}
                 messages={chatMessages}
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
