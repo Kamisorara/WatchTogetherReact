@@ -51,7 +51,7 @@ const HomePage: React.FC = () => {
   const closeSettings = () => setIsSettingsOpen(false);
 
   // 强制轮询状态
-  const [forcePolling, setForcePolling] = useState<boolean>(false);
+  const [forcePolling] = useState<boolean>(false);
 
   // 聊天窗口状态
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
