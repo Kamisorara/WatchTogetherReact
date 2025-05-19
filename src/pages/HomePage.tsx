@@ -55,6 +55,7 @@ const HomePage: React.FC = () => {
 
   // 聊天窗口状态
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<{
     id: string;
     userId: string;
@@ -84,7 +85,17 @@ const HomePage: React.FC = () => {
   // 添加退出登录确认对话框状态
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
 
-  // 退出登录处理函数
+  // 聊天窗口
+  const toggleChat = () => {
+    if (!isChatOpen) {
+      // 打开聊天时清除未读标记
+      setHasUnreadMessages(false);
+    }
+    setIsChatOpen(!isChatOpen);
+  };
+
+
+  // 退出登录处理
   const handleLogout = async () => {
     try {
       setIsLoading(true);
@@ -258,6 +269,11 @@ const HomePage: React.FC = () => {
           const chatMessage = JSON.parse(message.body);
           console.log("收到聊天消息:", chatMessage);
           setChatMessages(prevMessages => [...prevMessages, chatMessage]);
+
+          // 如果聊天窗口没有打开，且不是当前用户发送的消息，标记为有未读消息
+          if (!isChatOpen && chatMessage.userId !== currentUser.id) {
+            setHasUnreadMessages(true);
+          }
         } catch (error) {
           console.error("处理聊天消息失败:", error);
         }
@@ -700,32 +716,42 @@ const HomePage: React.FC = () => {
       {/* 主要内容 */}
       <div className="flex-grow flex flex-col bg-gray-50 relative">
         {/* 头部 */}
-        <div className="flex justify-between p-4 m-5 mt-5 mb-0 rounded-2xl bg-white shadow-md z-1">
-          {!isInRoom ? (
-            <div className="text-lg font-bold text-gray-800">尚未加入房间</div>
-          ) : (
-            <>
-              <div className="text-lg font-bold text-gray-800">观影派对: {roomCode}</div>
-              {selectedMovie && (
-                <div className="text-sm font-medium text-purple-600">
-                  正在播放: {selectedMovie.title}
-                </div>
-              )}
-            </>
-          )}
+        <div className="flex items-center justify-between p-4 m-5 mt-5 mb-0 rounded-2xl bg-white shadow-md z-1">
+          <div className="flex items-center flex-grow">
+            {!isInRoom ? (
+              <div className="text-lg font-bold text-gray-800">尚未加入房间</div>
+            ) : (
+              <div className="flex flex-col">
+                <div className="text-lg font-bold text-gray-800">观影派对: {roomCode}</div>
+                {selectedMovie && (
+                  <div className="text-sm font-medium text-purple-600 mt-1">
+                    正在播放: {selectedMovie.title}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
-          {/* 聊天按钮 */}
-          {isInRoom && wsConnectionStatus === 'connected' && (
-            <button
-              onClick={() => setIsChatOpen(!isChatOpen)}
-              className={`ml-4 p-2 rounded-lg transition-all ${isChatOpen
-                ? 'bg-purple-100 text-purple-700'
-                : 'hover:bg-gray-100'}`}
-              title={isChatOpen ? "关闭聊天" : "打开聊天"}
-            >
-              <ChatIcon />
-            </button>
-          )}
+          {/* 工具栏按钮区域 */}
+          <div className="flex items-center">
+            {isInRoom && wsConnectionStatus === 'connected' && (
+              <button
+                onClick={toggleChat}
+                className={`p-2.5 rounded-lg transition-all flex items-center justify-center ${isChatOpen
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                title={isChatOpen ? "关闭聊天" : "打开聊天"}
+              >
+                <div className="relative">
+                  <ChatIcon className="w-5 h-5" />
+                  {hasUnreadMessages && !isChatOpen && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                  )}
+                </div>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 修改视频内容区域为可分割布局 */}
@@ -825,7 +851,7 @@ const HomePage: React.FC = () => {
                 stompClient={stompClient}
                 roomCode={roomCode}
                 currentUser={currentUser}
-                messages={chatMessages} 
+                messages={chatMessages}
               />
             </div>
           )}
