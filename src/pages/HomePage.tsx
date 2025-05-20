@@ -225,7 +225,6 @@ const HomePage: React.FC = () => {
 
     socket.onerror = (error) => {
       console.error("SockJS连接错误:", error);
-      // 仅记录错误，让STOMP客户端处理重连
     };
 
     const client = new Client({
@@ -234,16 +233,15 @@ const HomePage: React.FC = () => {
         token: localStorage.getItem("token") || "",
         roomCode: room,
       },
-      // 减少心跳间隔，提高频率以保持连接活跃
+      // 减少心跳间隔 提高重连率
       heartbeatIncoming: 5000,
       heartbeatOutgoing: 5000,
-      // 减小重连延迟，更快地尝试恢复连接
+      // 减小重连延迟
       reconnectDelay: 2000,
     });
 
     client.onConnect = () => {
       console.log("已连接到WebSocket服务器");
-      // 更新连接状态为"已连接"
       setWsConnectionStatus('connected');
 
       // 连接成功后立即获取房间用户列表
