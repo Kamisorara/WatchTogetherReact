@@ -1,7 +1,7 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { API_URL } from './ipAddress';
-import { toast } from 'react-toastify'; // Add this import at the top
+import { toast } from 'react-toastify';
 
 const API_BASE_URL: string = API_URL;
 
