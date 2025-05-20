@@ -125,7 +125,7 @@ const OAuth2Register: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">完成 GitHub 注册</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">完成快捷登录注册</h2>
         <p className="text-sm text-gray-600 mb-8">请提供以下信息完成您的账户设置</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
