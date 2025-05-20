@@ -82,7 +82,13 @@ export const authApi = {
     return apiClient.get<{ url: string }>('/api/oauth2/github/authorize');
   },
 
-  // GitHub OAuth完成注册
+  // Google OAuth相关
+  getGoogleOAuthUrl: () => {
+    return apiClient.get<{ url: string }>('/api/oauth2/google/authorize');
+  },
+
+
+  // OAuth完成注册
   completeOAuthRegistration: (email: string, oauthId: string, username?: string) => {
     return apiClient.post<LoginResponse>('/api/oauth2/complete-registration', {
       email,

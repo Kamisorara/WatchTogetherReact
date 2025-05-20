@@ -12,7 +12,7 @@ const OAuth2Success: React.FC = () => {
     if (token) {
       // 保存token
       localStorage.setItem('token', token);
-      toast.success('GitHub登录成功！', {
+      toast.success('快捷登录成功！', {
         position: "top-left",
         autoClose: 2000,
         toastId: "github-login-success",
