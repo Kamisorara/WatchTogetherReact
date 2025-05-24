@@ -388,7 +388,7 @@ const HomePage: React.FC = () => {
     setStompClient(client);
 
     return client;
-  }, [fetchRoomUsers, fetchMovies, movies, currentUser.id, forcePolling]);
+  }, [fetchRoomUsers, fetchMovies, movies, currentUser.id, forcePolling, isChatOpen]);
 
   // 添加切换麦克风状态的函数
   const toggleMute = () => {
@@ -495,7 +495,7 @@ const HomePage: React.FC = () => {
   };
 
   // 获取用户信息
-  const getUserInfo = async () => {
+  const getUserInfo = useCallback(async () => {
     try {
       setIsUserLoading(true);
       const res = await authApi.getUserInfoFromToken();
@@ -528,12 +528,12 @@ const HomePage: React.FC = () => {
     } finally {
       setIsUserLoading(false);
     }
-  };
+  }, [navigate]);
 
   // 组件加载时获取用户信息
   useEffect(() => {
     getUserInfo();
-  }, []);
+  }, [getUserInfo]);
 
   // 组件卸载时清理WebSocket连接
   useEffect(() => {
